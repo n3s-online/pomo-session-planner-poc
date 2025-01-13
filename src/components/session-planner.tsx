@@ -1,17 +1,34 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GripVertical, X, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const STORAGE_KEYS = {
+  SESSIONS: "SessionPlanner_sessions",
+  SETTINGS: "SessionPlanner_pomodoroSettings",
+} as const;
 
 interface Session {
   id: string;
   title: string;
 }
 
+interface PomodoroSettings {
+  sessionLength: number;
+  breakLength: number;
+}
+
 const SessionPlanner = () => {
   const [sessions, setSessions] = useState<Session[]>(() => {
-    const savedSessions = localStorage.getItem("sessions");
+    const savedSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     return savedSessions
       ? JSON.parse(savedSessions)
       : [
@@ -21,6 +38,35 @@ const SessionPlanner = () => {
           { id: "4", title: "Sprint Planning" },
         ];
   });
+
+  const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(
+    () => {
+      const settings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      return settings
+        ? JSON.parse(settings)
+        : {
+            sessionLength: 25,
+            breakLength: 5,
+          };
+    }
+  );
+
+  const { hoursRemaining, minutesRemaining } = useMemo(() => {
+    const totalMinutes = sessions.reduce((totalMinutes, session, idx) => {
+      if (idx === sessions.length - 1) {
+        return totalMinutes + pomodoroSettings.sessionLength;
+      }
+      return (
+        totalMinutes +
+        pomodoroSettings.sessionLength +
+        pomodoroSettings.breakLength
+      );
+    }, 0);
+    return {
+      hoursRemaining: Math.floor(totalMinutes / 60),
+      minutesRemaining: totalMinutes % 60,
+    };
+  }, [pomodoroSettings, sessions]);
 
   const [newSessionTitle, setNewSessionTitle] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -67,17 +113,81 @@ const SessionPlanner = () => {
   };
 
   useEffect(() => {
-    localStorage.setItem("sessions", JSON.stringify(sessions));
+    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
   }, [sessions]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEYS.SETTINGS,
+      JSON.stringify(pomodoroSettings)
+    );
+  }, [pomodoroSettings]);
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Session Planner</h1>
-          <p className="text-gray-500 mt-2">
-            {sessions.length} remaining sessions
-          </p>
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Session Planner
+            </h1>
+            <p className="text-gray-500 mt-2">
+              {sessions.length} remaining sessions, {hoursRemaining}hr{" "}
+              {minutesRemaining}min
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Session Length
+              </label>
+              <Select
+                value={pomodoroSettings.sessionLength.toString()}
+                onValueChange={(value) =>
+                  setPomodoroSettings((prev) => ({
+                    ...prev,
+                    sessionLength: parseInt(value),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Session Length" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[10, 15, 20, 25, 30, 40, 45, 60].map((mins) => (
+                    <SelectItem key={mins} value={mins.toString()}>
+                      {mins} minutes
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Break Length
+              </label>
+              <Select
+                value={pomodoroSettings.breakLength.toString()}
+                onValueChange={(value) =>
+                  setPomodoroSettings((prev) => ({
+                    ...prev,
+                    breakLength: parseInt(value),
+                  }))
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Break Length" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[3, 5, 8, 10, 15, 30].map((mins) => (
+                    <SelectItem key={mins} value={mins.toString()}>
+                      {mins} minutes
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </div>
 
