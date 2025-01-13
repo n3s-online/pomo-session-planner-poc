@@ -5,5 +5,5 @@ import { ghPages } from "vite-plugin-gh-pages";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), ghPages()],
-  base: "/pomo-session-planner-doc/",
+  base: "/pomo-session-planner-poc/",
 });
