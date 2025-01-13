@@ -129,14 +129,16 @@ const SessionPlanner = () => {
 
                 {/* Centered delete button */}
                 <div className="flex items-center pr-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-gray-500 hover:text-red-600"
-                    onClick={() => handleDelete(session.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  {index > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-500 hover:text-red-600"
+                      onClick={() => handleDelete(session.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
