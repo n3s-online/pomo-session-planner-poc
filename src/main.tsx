@@ -6,6 +6,5 @@ import App from "./App";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-    <div className="text-blue-500 font-bold">Tailwind Test</div>
   </StrictMode>
 );
