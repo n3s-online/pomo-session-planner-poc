@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GripVertical, X, Plus } from "lucide-react";
@@ -10,12 +10,17 @@ interface Session {
 }
 
 const SessionPlanner = () => {
-  const [sessions, setSessions] = useState<Session[]>([
-    { id: "1", title: "Product Team Sync" },
-    { id: "2", title: "Feature Development" },
-    { id: "3", title: "Code Review & Documentation" },
-    { id: "4", title: "Sprint Planning" },
-  ]);
+  const [sessions, setSessions] = useState<Session[]>(() => {
+    const savedSessions = localStorage.getItem("sessions");
+    return savedSessions
+      ? JSON.parse(savedSessions)
+      : [
+          { id: "1", title: "Product Team Sync" },
+          { id: "2", title: "Feature Development" },
+          { id: "3", title: "Code Review & Documentation" },
+          { id: "4", title: "Sprint Planning" },
+        ];
+  });
 
   const [newSessionTitle, setNewSessionTitle] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -60,6 +65,10 @@ const SessionPlanner = () => {
       setNewSessionTitle("");
     }
   };
+
+  useEffect(() => {
+    localStorage.setItem("sessions", JSON.stringify(sessions));
+  }, [sessions]);
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
