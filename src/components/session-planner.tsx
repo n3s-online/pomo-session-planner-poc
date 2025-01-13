@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GripVertical, X, Plus } from "lucide-react";
+import { GripVertical, X, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,6 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const STORAGE_KEYS = {
   SESSIONS: "SessionPlanner_sessions",
@@ -19,6 +24,7 @@ const STORAGE_KEYS = {
 interface Session {
   id: string;
   title: string;
+  description?: string;
 }
 
 interface PomodoroSettings {
@@ -69,6 +75,7 @@ const SessionPlanner = () => {
   }, [pomodoroSettings, sessions]);
 
   const [newSessionTitle, setNewSessionTitle] = useState("");
+  const [newSessionDescription, setNewSessionDescription] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => {
@@ -106,9 +113,11 @@ const SessionPlanner = () => {
         {
           id: Date.now().toString(),
           title: newSessionTitle.trim(),
+          description: newSessionDescription.trim() || undefined,
         },
       ]);
       setNewSessionTitle("");
+      setNewSessionDescription("");
     }
   };
 
@@ -217,11 +226,46 @@ const SessionPlanner = () => {
                 {/* Main content */}
                 <div className="flex-1">
                   <CardContent className="p-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-lg text-gray-900">
-                        {session.title}
-                      </h3>
-                    </div>
+                    {index === 0 ? (
+                      // Active session - always show description
+                      <div className="space-y-2">
+                        <h3 className="font-medium text-lg text-gray-900">
+                          {session.title}
+                        </h3>
+                        {session.description && (
+                          <p className="text-sm text-gray-500">
+                            {session.description}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      // Inactive sessions - collapsible description
+                      <Collapsible>
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium text-lg text-gray-900">
+                            {session.title}
+                          </h3>
+                          {session.description && (
+                            <CollapsibleTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8"
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                            </CollapsibleTrigger>
+                          )}
+                        </div>
+                        {session.description && (
+                          <CollapsibleContent className="pt-2">
+                            <p className="text-sm text-gray-500">
+                              {session.description}
+                            </p>
+                          </CollapsibleContent>
+                        )}
+                      </Collapsible>
+                    )}
                   </CardContent>
                   {index === 0 && (
                     <CardFooter className="p-4 pt-0">
@@ -257,21 +301,26 @@ const SessionPlanner = () => {
 
         <Card className="bg-gray-50 border-dashed">
           <CardContent className="p-4">
-            <form
-              onSubmit={handleAddSession}
-              className="flex items-center gap-2"
-            >
+            <form onSubmit={handleAddSession} className="space-y-4">
               <Input
                 type="text"
-                placeholder="Enter new session title..."
+                placeholder="Enter session title..."
                 value={newSessionTitle}
                 onChange={(e) => setNewSessionTitle(e.target.value)}
-                className="flex-1"
               />
-              <Button type="submit" disabled={!newSessionTitle.trim()}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Session
-              </Button>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  placeholder="Enter session description (optional)..."
+                  value={newSessionDescription}
+                  onChange={(e) => setNewSessionDescription(e.target.value)}
+                  className="flex-1"
+                />
+                <Button type="submit" disabled={!newSessionTitle.trim()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Session
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
