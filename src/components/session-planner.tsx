@@ -4,6 +4,12 @@ import { SessionCard } from "@/components/session-card";
 import { CreateSessionCard } from "@/components/create-session-card";
 import { PomodoroSettings } from "@/types/pomodoro";
 import { PomodoroSettingsComponent } from "@/components/pomodoro-settings";
+import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 
 const STORAGE_KEYS = {
   SESSIONS: "SessionPlanner_sessions",
@@ -86,6 +92,17 @@ const SessionPlanner = () => {
 
     setSessions(newSessions);
     setDraggedIndex(index);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setSessions((prev) => {
+      const oldIndex = prev.findIndex((s) => s.id === active.id);
+      const newIndex = prev.findIndex((s) => s.id === over.id);
+      return arrayMove(prev, oldIndex, newIndex);
+    });
   };
 
   const handleDismiss = () => {
@@ -181,18 +198,26 @@ const SessionPlanner = () => {
       </div>
 
       <div className="space-y-4">
-        {nonCompletedSessions.map((session, index) => (
-          <SessionCard
-            key={session.id}
-            session={session}
-            activeSession={index === 0}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDismiss={index === 0 ? handleDismiss : undefined}
-            onDelete={() => handleDelete(session.id)}
-            onComplete={() => handleComplete(session.id)}
-          />
-        ))}
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={nonCompletedSessions.map((s) => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {nonCompletedSessions.map((session, index) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                activeSession={index === 0}
+                onDismiss={index === 0 ? handleDismiss : undefined}
+                onDelete={() => handleDelete(session.id)}
+                onComplete={() => handleComplete(session.id)}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
 
         <CreateSessionCard onNewSession={handleNewSession} />
 
@@ -201,8 +226,6 @@ const SessionPlanner = () => {
             key={session.id}
             session={session}
             activeSession={false}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
             onDismiss={index === 0 ? handleDismiss : undefined}
             onDelete={() => handleDelete(session.id)}
             onComplete={() => handleComplete(session.id)}

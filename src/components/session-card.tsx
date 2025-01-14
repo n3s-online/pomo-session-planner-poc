@@ -8,12 +8,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Session } from "@/types/session";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface SessionCardProps {
   session: Session;
   activeSession: boolean;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
   onDismiss?: () => void;
   onDelete: () => void;
   onComplete: () => void;
@@ -22,37 +22,58 @@ interface SessionCardProps {
 export const SessionCard: React.FC<SessionCardProps> = ({
   session,
   activeSession,
-  onDragStart,
-  onDragOver,
   onDismiss,
   onDelete,
   onComplete,
 }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: session.id,
+    disabled: session.completed,
+    transition: {
+      duration: 200,
+      easing: "ease",
+    },
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition: [
+      transform ? `transform ${transition}` : "",
+      "box-shadow 200ms ease",
+    ]
+      .filter(Boolean)
+      .join(", "),
+  };
+
   return (
     <div
-      draggable={!session.completed}
-      onDragStart={session.completed ? undefined : onDragStart}
-      onDragOver={session.completed ? undefined : onDragOver}
+      ref={setNodeRef}
+      style={style}
       className={`
-        transition-all duration-200
-        ${
-          session.completed
-            ? "opacity-50"
-            : activeSession
-            ? "scale-100"
-            : "scale-98"
-        }
+        ${session.completed ? "opacity-50" : ""}
+        ${isDragging ? "z-50" : "z-0"}
       `}
     >
       <Card
         className={`
           ${activeSession ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
-          hover:shadow-md transition-shadow
+          hover:shadow-md
           ${session.completed ? "select-none" : ""}
+          ${!isDragging && !activeSession ? "transform scale-[0.98]" : ""}
+          transition-[shadow,transform] duration-200 ease-in-out
         `}
       >
         <div className="flex">
           <div
+            {...attributes}
+            {...listeners}
             className={`py-4 px-3 cursor-grab hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors ${
               session.completed ? "pointer-events-none" : ""
             }`}
