@@ -34,6 +34,7 @@ export const CreateSessionCard: React.FC<CreateSessionCardProps> = ({
     onNewSession({
       title: data.title.trim(),
       description: data.description.trim() || undefined,
+      completed: false,
     });
     reset();
   });
