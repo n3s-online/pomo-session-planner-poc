@@ -93,22 +93,28 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               )}
             </CardContent>
             {activeSession && !session.completed && (
-              <CardFooter className="p-4 pt-0 flex flex-row gap-4">
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={onDismiss}
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Dismiss Session
-                </Button>
-                <Button
-                  variant="default"
-                  className="w-full"
-                  onClick={onComplete}
-                >
-                  Complete Session
-                </Button>
+              <CardFooter className="p-4 pt-0">
+                <div className="flex flex-row w-full gap-2 sm:gap-4">
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={onDismiss}
+                    size="responsive"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Dismiss
+                    <span className="hidden md:block"> Session</span>
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="w-full"
+                    onClick={onComplete}
+                    size="responsive"
+                  >
+                    Complete
+                    <span className="hidden md:block"> Session</span>
+                  </Button>
+                </div>
               </CardFooter>
             )}
           </div>

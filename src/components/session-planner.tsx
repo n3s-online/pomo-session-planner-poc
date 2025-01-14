@@ -121,6 +121,14 @@ const SessionPlanner = () => {
     });
   };
 
+  const handleKeepNonCompleted = () => {
+    setSessions((prev) => prev.filter((s) => !s.completed));
+  };
+
+  const handleDeleteAll = () => {
+    setSessions([]);
+  };
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
   }, [sessions]);
@@ -138,8 +146,8 @@ const SessionPlanner = () => {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
+        <div className="flex gap-4 flex-col md:flex-row justify-between items-start">
+          <div className="w-full">
             <h1 className="text-3xl font-bold text-gray-900">
               Session Planner
             </h1>
@@ -158,12 +166,15 @@ const SessionPlanner = () => {
               </div>
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 items-center min-w-[300px]">
             <PomodoroSettingsComponent
               settings={pomodoroSettings}
               onSettingsChange={(newSettings: PomodoroSettings) =>
                 setPomodoroSettings(newSettings)
               }
+              hasNonCompletedSessions={nonCompletedSessions.length > 0}
+              onKeepNonCompleted={handleKeepNonCompleted}
+              onDeleteAll={handleDeleteAll}
             />
           </div>
         </div>

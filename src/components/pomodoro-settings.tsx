@@ -7,21 +7,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PomodoroSettings } from "@/types/pomodoro";
+import { ClearSessionsButton } from "@/components/ClearSessionsButton";
 
 interface PomodoroSettingsProps {
   settings: PomodoroSettings;
   onSettingsChange: (settings: PomodoroSettings) => void;
+  hasNonCompletedSessions: boolean;
+  onKeepNonCompleted: () => void;
+  onDeleteAll: () => void;
 }
 
 export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
   settings,
   onSettingsChange,
+  hasNonCompletedSessions,
+  onKeepNonCompleted,
+  onDeleteAll,
 }) => {
   return (
-    <div className="flex gap-4">
-      {/* Session Length */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
+    <div className="mt-0 md:mt-8 w-full flex flex-row gap-x-1 sm:gap-x-2 md:gap-x-4 text-xs">
+      <div className="grid grid-rows-[auto_1fr] gap-y-2">
+        <label className="text-xs font-medium text-gray-700">
           Session Length
         </label>
         <Select
@@ -33,7 +39,7 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
             })
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Session Length" />
           </SelectTrigger>
           <SelectContent>
@@ -45,9 +51,8 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
           </SelectContent>
         </Select>
       </div>
-      {/* Break Length */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
+      <div className="grid grid-rows-[auto_1fr] gap-y-2">
+        <label className="text-xs font-medium text-gray-700">
           Break Length
         </label>
         <Select
@@ -59,7 +64,7 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
             })
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Break Length" />
           </SelectTrigger>
           <SelectContent>
@@ -70,6 +75,16 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="grid grid-rows-[auto_1fr] gap-y-2">
+        <div className="text-xs font-medium text-gray-700 whitespace-nowrap">
+          Clear Sessions
+        </div>
+        <ClearSessionsButton
+          hasNonCompletedSessions={hasNonCompletedSessions}
+          onKeepNonCompleted={onKeepNonCompleted}
+          onDeleteAll={onDeleteAll}
+        />
       </div>
     </div>
   );
