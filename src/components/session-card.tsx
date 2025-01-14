@@ -11,33 +11,42 @@ import { Session } from "@/types/session";
 
 interface SessionCardProps {
   session: Session;
-  index: number;
+  activeSession: boolean;
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDismiss?: () => void;
-  onDelete?: () => void;
+  onDelete: () => void;
+  onComplete: () => void;
 }
 
 export const SessionCard: React.FC<SessionCardProps> = ({
   session,
-  index,
+  activeSession,
   onDragStart,
   onDragOver,
   onDismiss,
   onDelete,
+  onComplete,
 }) => {
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      className={`transition-all duration-200 ${
-        index === 0 ? "scale-100" : "scale-98"
-      }`}
+      draggable={!session.completed}
+      onDragStart={session.completed ? undefined : onDragStart}
+      onDragOver={session.completed ? undefined : onDragOver}
+      className={`
+        transition-all duration-200
+        ${
+          session.completed
+            ? "opacity-50 pointer-events-none"
+            : activeSession
+            ? "scale-100"
+            : "scale-98"
+        }
+      `}
     >
       <Card
         className={`
-          ${index === 0 ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
+          ${activeSession ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
           hover:shadow-md transition-shadow
         `}
       >
@@ -48,7 +57,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
           <div className="flex-1">
             <CardContent className="p-4">
-              {index === 0 ? (
+              {activeSession ? (
                 <div className="space-y-2">
                   <h3 className="font-medium text-lg text-gray-900">
                     {session.title}
@@ -83,8 +92,8 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 </Collapsible>
               )}
             </CardContent>
-            {index === 0 && onDismiss && (
-              <CardFooter className="p-4 pt-0">
+            {activeSession && !session.completed && (
+              <CardFooter className="p-4 pt-0 flex flex-row gap-4">
                 <Button
                   variant="destructive"
                   className="w-full"
@@ -93,12 +102,19 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <X className="w-4 h-4 mr-2" />
                   Dismiss Session
                 </Button>
+                <Button
+                  variant="default"
+                  className="w-full"
+                  onClick={onComplete}
+                >
+                  Complete Session
+                </Button>
               </CardFooter>
             )}
           </div>
 
           <div className="flex items-center pr-4">
-            {index > 0 && onDelete && (
+            {!activeSession && onDelete && (
               <Button
                 variant="ghost"
                 size="icon"

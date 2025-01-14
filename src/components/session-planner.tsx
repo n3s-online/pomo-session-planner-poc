@@ -10,6 +10,30 @@ const STORAGE_KEYS = {
   SETTINGS: "SessionPlanner_pomodoroSettings",
 } as const;
 
+type SessionStats = {
+  hoursRemaining: number;
+  minutesRemaining: number;
+  count: number;
+};
+
+function calcSessionStats(
+  sessionsList: Session[],
+  settings: PomodoroSettings
+): SessionStats {
+  const totalMinutes = sessionsList.reduce((sum, _, idx) => {
+    if (idx === sessionsList.length - 1) {
+      return sum + settings.sessionLength;
+    }
+    return sum + settings.sessionLength + settings.breakLength;
+  }, 0);
+
+  return {
+    hoursRemaining: Math.floor(totalMinutes / 60),
+    minutesRemaining: totalMinutes % 60,
+    count: sessionsList.length,
+  };
+}
+
 const SessionPlanner = () => {
   const [sessions, setSessions] = useState<Session[]>(() => {
     const savedSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
@@ -35,20 +59,13 @@ const SessionPlanner = () => {
     }
   );
 
-  const { hoursRemaining, minutesRemaining } = useMemo(() => {
-    const totalMinutes = sessions.reduce((totalMinutes, session, idx) => {
-      if (idx === sessions.length - 1) {
-        return totalMinutes + pomodoroSettings.sessionLength;
-      }
-      return (
-        totalMinutes +
-        pomodoroSettings.sessionLength +
-        pomodoroSettings.breakLength
-      );
-    }, 0);
+  const { pendingSessionStats, completedSessionStats } = useMemo(() => {
+    const nonCompleted = sessions.filter((s) => !s.completed);
+    const done = sessions.filter((s) => s.completed);
+
     return {
-      hoursRemaining: Math.floor(totalMinutes / 60),
-      minutesRemaining: totalMinutes % 60,
+      pendingSessionStats: calcSessionStats(nonCompleted, pomodoroSettings),
+      completedSessionStats: calcSessionStats(done, pomodoroSettings),
     };
   }, [pomodoroSettings, sessions]);
 
@@ -87,8 +104,21 @@ const SessionPlanner = () => {
       {
         id: Date.now().toString(),
         ...sessionData,
+        completed: false,
       },
     ]);
+  };
+
+  const handleComplete = (id: string) => {
+    setSessions((prevSessions) => {
+      const index = prevSessions.findIndex((s) => s.id === id);
+      if (index === -1) return prevSessions;
+      const updatedSession = { ...prevSessions[index], completed: true };
+      const newSessions = [...prevSessions];
+      newSessions.splice(index, 1);
+      newSessions.push(updatedSession);
+      return newSessions;
+    });
   };
 
   useEffect(() => {
@@ -102,6 +132,9 @@ const SessionPlanner = () => {
     );
   }, [pomodoroSettings]);
 
+  const nonCompletedSessions = sessions.filter((s) => !s.completed);
+  const completedSessions = sessions.filter((s) => s.completed);
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="space-y-4">
@@ -110,9 +143,19 @@ const SessionPlanner = () => {
             <h1 className="text-3xl font-bold text-gray-900">
               Session Planner
             </h1>
-            <p className="text-gray-500 mt-2">
-              {sessions.length} remaining sessions, {hoursRemaining}hr{" "}
-              {minutesRemaining}min
+            <div className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
+              <div>{pendingSessionStats.count} remaining sessions</div>
+              <div>
+                {pendingSessionStats.hoursRemaining}hr{" "}
+                {pendingSessionStats.minutesRemaining}min
+              </div>
+            </div>
+            <p className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
+              <div>{completedSessionStats.count} completed sessions</div>
+              <div>
+                {completedSessionStats.hoursRemaining}hr{" "}
+                {completedSessionStats.minutesRemaining}min
+              </div>
             </p>
           </div>
           <div className="flex gap-4">
@@ -127,19 +170,33 @@ const SessionPlanner = () => {
       </div>
 
       <div className="space-y-4">
-        {sessions.map((session, index) => (
+        {nonCompletedSessions.map((session, index) => (
           <SessionCard
             key={session.id}
             session={session}
-            index={index}
+            activeSession={index === 0}
             onDragStart={() => handleDragStart(index)}
             onDragOver={(e) => handleDragOver(e, index)}
             onDismiss={index === 0 ? handleDismiss : undefined}
-            onDelete={index > 0 ? () => handleDelete(session.id) : undefined}
+            onDelete={() => handleDelete(session.id)}
+            onComplete={() => handleComplete(session.id)}
           />
         ))}
 
         <CreateSessionCard onNewSession={handleNewSession} />
+
+        {completedSessions.map((session, index) => (
+          <SessionCard
+            key={session.id}
+            session={session}
+            activeSession={false}
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDismiss={index === 0 ? handleDismiss : undefined}
+            onDelete={() => handleDelete(session.id)}
+            onComplete={() => handleComplete(session.id)}
+          />
+        ))}
       </div>
     </div>
   );
