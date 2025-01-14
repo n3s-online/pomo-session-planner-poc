@@ -1,36 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { GripVertical, X, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Session } from "@/types/session";
+import { SessionCard } from "@/components/session-card";
+import { CreateSessionCard } from "@/components/create-session-card";
+import { PomodoroSettings } from "@/types/pomodoro";
+import { PomodoroSettingsComponent } from "@/components/pomodoro-settings";
 
 const STORAGE_KEYS = {
   SESSIONS: "SessionPlanner_sessions",
   SETTINGS: "SessionPlanner_pomodoroSettings",
 } as const;
-
-interface Session {
-  id: string;
-  title: string;
-  description?: string;
-}
-
-interface PomodoroSettings {
-  sessionLength: number;
-  breakLength: number;
-}
 
 const SessionPlanner = () => {
   const [sessions, setSessions] = useState<Session[]>(() => {
@@ -74,8 +52,6 @@ const SessionPlanner = () => {
     };
   }, [pomodoroSettings, sessions]);
 
-  const [newSessionTitle, setNewSessionTitle] = useState("");
-  const [newSessionDescription, setNewSessionDescription] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => {
@@ -105,20 +81,14 @@ const SessionPlanner = () => {
     setSessions(sessions.filter((session) => session.id !== id));
   };
 
-  const handleAddSession = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newSessionTitle.trim()) {
-      setSessions([
-        ...sessions,
-        {
-          id: Date.now().toString(),
-          title: newSessionTitle.trim(),
-          description: newSessionDescription.trim() || undefined,
-        },
-      ]);
-      setNewSessionTitle("");
-      setNewSessionDescription("");
-    }
+  const handleNewSession = (sessionData: Omit<Session, "id">) => {
+    setSessions([
+      ...sessions,
+      {
+        id: Date.now().toString(),
+        ...sessionData,
+      },
+    ]);
   };
 
   useEffect(() => {
@@ -146,184 +116,30 @@ const SessionPlanner = () => {
             </p>
           </div>
           <div className="flex gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Session Length
-              </label>
-              <Select
-                value={pomodoroSettings.sessionLength.toString()}
-                onValueChange={(value) =>
-                  setPomodoroSettings((prev) => ({
-                    ...prev,
-                    sessionLength: parseInt(value),
-                  }))
-                }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Session Length" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 15, 20, 25, 30, 40, 45, 60].map((mins) => (
-                    <SelectItem key={mins} value={mins.toString()}>
-                      {mins} minutes
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Break Length
-              </label>
-              <Select
-                value={pomodoroSettings.breakLength.toString()}
-                onValueChange={(value) =>
-                  setPomodoroSettings((prev) => ({
-                    ...prev,
-                    breakLength: parseInt(value),
-                  }))
-                }
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Break Length" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[3, 5, 8, 10, 15, 30].map((mins) => (
-                    <SelectItem key={mins} value={mins.toString()}>
-                      {mins} minutes
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <PomodoroSettingsComponent
+              settings={pomodoroSettings}
+              onSettingsChange={(newSettings: PomodoroSettings) =>
+                setPomodoroSettings(newSettings)
+              }
+            />
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
         {sessions.map((session, index) => (
-          <div
+          <SessionCard
             key={session.id}
-            draggable
+            session={session}
+            index={index}
             onDragStart={() => handleDragStart(index)}
             onDragOver={(e) => handleDragOver(e, index)}
-            className={`transition-all duration-200 ${
-              index === 0 ? "scale-100" : "scale-98"
-            }`}
-          >
-            <Card
-              className={`
-              ${index === 0 ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
-              hover:shadow-md transition-shadow
-            `}
-            >
-              <div className="flex">
-                {/* Full-height drag handle */}
-                <div className="py-4 px-3 cursor-grab hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors">
-                  <GripVertical className="h-5 w-5" />
-                </div>
-
-                {/* Main content */}
-                <div className="flex-1">
-                  <CardContent className="p-4">
-                    {index === 0 ? (
-                      // Active session - always show description
-                      <div className="space-y-2">
-                        <h3 className="font-medium text-lg text-gray-900">
-                          {session.title}
-                        </h3>
-                        {session.description && (
-                          <p className="text-sm text-gray-500">
-                            {session.description}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      // Inactive sessions - collapsible description
-                      <Collapsible>
-                        <div className="flex justify-between items-center">
-                          <h3 className="font-medium text-lg text-gray-900">
-                            {session.title}
-                          </h3>
-                          {session.description && (
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8"
-                              >
-                                <ChevronDown className="h-4 w-4" />
-                              </Button>
-                            </CollapsibleTrigger>
-                          )}
-                        </div>
-                        {session.description && (
-                          <CollapsibleContent className="pt-2">
-                            <p className="text-sm text-gray-500">
-                              {session.description}
-                            </p>
-                          </CollapsibleContent>
-                        )}
-                      </Collapsible>
-                    )}
-                  </CardContent>
-                  {index === 0 && (
-                    <CardFooter className="p-4 pt-0">
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={handleDismiss}
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Dismiss Session
-                      </Button>
-                    </CardFooter>
-                  )}
-                </div>
-
-                {/* Centered delete button */}
-                <div className="flex items-center pr-4">
-                  {index > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-gray-500 hover:text-red-600"
-                      onClick={() => handleDelete(session.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
+            onDismiss={index === 0 ? handleDismiss : undefined}
+            onDelete={index > 0 ? () => handleDelete(session.id) : undefined}
+          />
         ))}
 
-        <Card className="bg-gray-50 border-dashed">
-          <CardContent className="p-4">
-            <form onSubmit={handleAddSession} className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Enter session title..."
-                value={newSessionTitle}
-                onChange={(e) => setNewSessionTitle(e.target.value)}
-              />
-              <div className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  placeholder="Enter session description (optional)..."
-                  value={newSessionDescription}
-                  onChange={(e) => setNewSessionDescription(e.target.value)}
-                  className="flex-1"
-                />
-                <Button type="submit" disabled={!newSessionTitle.trim()}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Session
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <CreateSessionCard onNewSession={handleNewSession} />
       </div>
     </div>
   );
