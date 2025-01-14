@@ -37,7 +37,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         transition-all duration-200
         ${
           session.completed
-            ? "opacity-50 pointer-events-none"
+            ? "opacity-50"
             : activeSession
             ? "scale-100"
             : "scale-98"
@@ -48,10 +48,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
         className={`
           ${activeSession ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
           hover:shadow-md transition-shadow
+          ${session.completed ? "select-none" : ""}
         `}
       >
         <div className="flex">
-          <div className="py-4 px-3 cursor-grab hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors">
+          <div
+            className={`py-4 px-3 cursor-grab hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors ${
+              session.completed ? "pointer-events-none" : ""
+            }`}
+          >
             <GripVertical className="h-5 w-5" />
           </div>
 
@@ -120,7 +125,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           </div>
 
           <div className="flex items-center pr-4">
-            {!activeSession && onDelete && (
+            {!activeSession && !session.completed && onDelete && (
               <Button
                 variant="ghost"
                 size="icon"
