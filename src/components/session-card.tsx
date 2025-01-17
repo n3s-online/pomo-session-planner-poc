@@ -79,11 +79,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           ${
             activeSession
               ? "ring-2 ring-blue-500 shadow-lg hover:shadow-xl bg-gradient-to-br from-green-100 to-blue-100"
-              : "shadow-sm hover:shadow-md"
+              : "ring-0 shadow-sm hover:shadow-md bg-gradient-to-br from-white to-white"
           }
           ${session.completed ? "select-none" : ""}
-          ${!isDragging && !activeSession ? "transform scale-[0.98]" : ""}
-          transition-[shadow,transform] duration-200 ease-in-out
+          ${
+            !isDragging && !activeSession
+              ? "transform scale-[0.98]"
+              : "transform scale-100"
+          }
+          transition-all duration-300 ease-in-out
         `}
       >
         <div className="flex">
