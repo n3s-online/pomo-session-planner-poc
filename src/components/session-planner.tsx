@@ -146,6 +146,14 @@ const SessionPlanner = () => {
     setSessions([]);
   };
 
+  const handleEdit = (id: string, updates: Partial<Session>) => {
+    setSessions((prevSessions) =>
+      prevSessions.map((session) =>
+        session.id === id ? { ...session, ...updates } : session
+      )
+    );
+  };
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
   }, [sessions]);
@@ -214,6 +222,7 @@ const SessionPlanner = () => {
                 onDismiss={index === 0 ? handleDismiss : undefined}
                 onDelete={() => handleDelete(session.id)}
                 onComplete={() => handleComplete(session.id)}
+                onEdit={handleEdit}
               />
             ))}
           </SortableContext>
@@ -229,6 +238,7 @@ const SessionPlanner = () => {
             onDismiss={index === 0 ? handleDismiss : undefined}
             onDelete={() => handleDelete(session.id)}
             onComplete={() => handleComplete(session.id)}
+            onEdit={handleEdit}
           />
         ))}
       </div>

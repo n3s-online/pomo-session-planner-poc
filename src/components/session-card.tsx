@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GripVertical, X, ChevronDown } from "lucide-react";
+import { GripVertical, X, ChevronDown, Pencil, Save } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -10,6 +10,7 @@ import {
 import { Session } from "@/types/session";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { SessionForm } from "./session-form";
 
 interface SessionCardProps {
   session: Session;
@@ -17,6 +18,7 @@ interface SessionCardProps {
   onDismiss?: () => void;
   onDelete: () => void;
   onComplete: () => void;
+  onEdit: (id: string, updates: Partial<Session>) => void;
 }
 
 export const SessionCard: React.FC<SessionCardProps> = ({
@@ -25,7 +27,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   onDismiss,
   onDelete,
   onComplete,
+  onEdit,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
   const {
     attributes,
     listeners,
@@ -50,6 +54,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     ]
       .filter(Boolean)
       .join(", "),
+  };
+
+  const handleEdit = (data: Omit<Session, "id" | "completed">) => {
+    onEdit(session.id, data);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
   };
 
   return (
@@ -86,7 +99,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
           <div className="flex-1">
             <CardContent className="p-4">
-              {activeSession ? (
+              {isEditing ? (
+                <SessionForm
+                  onSubmit={handleEdit}
+                  onCancel={handleCancelEdit}
+                  initialData={session}
+                  submitLabel="Save"
+                  submitIcon={<Save className="w-4 h-4 mr-2" />}
+                />
+              ) : activeSession ? (
                 <div className="space-y-2">
                   <h3 className="font-medium text-lg text-gray-900">
                     {session.title}
@@ -149,15 +170,27 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           </div>
 
           <div className="flex items-center pr-4">
-            {!activeSession && !session.completed && onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-red-600"
-                onClick={onDelete}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+            {!activeSession && !session.completed && (
+              <>
+                {!isEditing && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-500 hover:text-red-600"
+                  onClick={onDelete}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
             )}
           </div>
         </div>
