@@ -63,8 +63,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({
     >
       <Card
         className={`
-          ${activeSession ? "ring-2 ring-blue-500 shadow-lg" : "shadow-sm"}
-          hover:shadow-md
+          ${
+            activeSession
+              ? "ring-2 ring-blue-500 shadow-lg hover:shadow-xl bg-gradient-to-br from-green-100 to-blue-100"
+              : "shadow-sm hover:shadow-md"
+          }
           ${session.completed ? "select-none" : ""}
           ${!isDragging && !activeSession ? "transform scale-[0.98]" : ""}
           transition-[shadow,transform] duration-200 ease-in-out
