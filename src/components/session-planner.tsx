@@ -4,7 +4,15 @@ import { SessionCard } from "@/components/session-card";
 import { CreateSessionCard } from "@/components/create-session-card";
 import { PomodoroSettings } from "@/types/pomodoro";
 import { PomodoroSettingsComponent } from "@/components/pomodoro-settings";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -168,6 +176,8 @@ const SessionPlanner = () => {
   const nonCompletedSessions = sessions.filter((s) => !s.completed);
   const completedSessions = sessions.filter((s) => s.completed);
 
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="space-y-4">
@@ -209,6 +219,7 @@ const SessionPlanner = () => {
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          sensors={sensors}
         >
           <SortableContext
             items={nonCompletedSessions.map((s) => s.id)}
