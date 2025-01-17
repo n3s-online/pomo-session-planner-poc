@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Session } from "@/types/session";
 import { sessionFormSchema, SessionFormData } from "@/types/session-schema";
 
@@ -26,6 +26,7 @@ export const SessionForm: React.FC<SessionFormProps> = ({
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<SessionFormData>({
     resolver: zodResolver(sessionFormSchema),
     defaultValues: {
@@ -39,6 +40,9 @@ export const SessionForm: React.FC<SessionFormProps> = ({
       title: data.title,
       description: data.description || undefined,
     });
+    if (!initialData) {
+      reset();
+    }
   });
 
   return (
