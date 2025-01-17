@@ -77,7 +77,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           <div
             {...attributes}
             {...listeners}
-            className={`py-4 px-3 cursor-grab hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors ${
+            className={`py-4 px-3 cursor-grab text-gray-400 hover:text-gray-600 transition-colors ${
               session.completed ? "pointer-events-none" : ""
             }`}
           >
