@@ -1,13 +1,8 @@
 import React from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PomodoroSettings } from "@/types/pomodoro";
 import { ClearSessionsButton } from "@/components/ClearSessionsButton";
+import { PomodoroSettingsDialog } from "@/components/pomodoro-settings-dialog";
+import { Button } from "@/components/ui/button";
 
 interface PomodoroSettingsProps {
   settings: PomodoroSettings;
@@ -25,57 +20,7 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
   onDeleteAll,
 }) => {
   return (
-    <div className="mt-0 md:mt-8 w-full flex flex-row gap-x-1 sm:gap-x-2 md:gap-x-4 text-xs">
-      <div className="grid grid-rows-[auto_1fr] gap-y-2">
-        <label className="text-xs font-medium text-gray-700">
-          Session Length
-        </label>
-        <Select
-          value={settings.sessionLength.toString()}
-          onValueChange={(value) =>
-            onSettingsChange({
-              ...settings,
-              sessionLength: parseInt(value),
-            })
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Session Length" />
-          </SelectTrigger>
-          <SelectContent>
-            {[10, 15, 20, 25, 30, 40, 45, 60].map((mins) => (
-              <SelectItem key={mins} value={mins.toString()}>
-                {mins} minutes
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid grid-rows-[auto_1fr] gap-y-2">
-        <label className="text-xs font-medium text-gray-700">
-          Break Length
-        </label>
-        <Select
-          value={settings.breakLength.toString()}
-          onValueChange={(value) =>
-            onSettingsChange({
-              ...settings,
-              breakLength: parseInt(value),
-            })
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Break Length" />
-          </SelectTrigger>
-          <SelectContent>
-            {[3, 5, 8, 10, 15, 30].map((mins) => (
-              <SelectItem key={mins} value={mins.toString()}>
-                {mins} minutes
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="mt-0 md:mt-8 w-full flex flex-row-reverse gap-x-1 sm:gap-x-2 md:gap-x-4 text-xs">
       <div className="grid grid-rows-[auto_1fr] gap-y-2">
         <div className="text-xs font-medium text-gray-700 whitespace-nowrap">
           Clear Sessions
@@ -85,6 +30,17 @@ export const PomodoroSettingsComponent: React.FC<PomodoroSettingsProps> = ({
           onKeepNonCompleted={onKeepNonCompleted}
           onDeleteAll={onDeleteAll}
         />
+      </div>
+      <div className="grid grid-rows-[auto_1fr] gap-y-2">
+        <div className="text-xs font-medium text-gray-700">Settings</div>
+        <PomodoroSettingsDialog
+          settings={settings}
+          onSettingsChange={onSettingsChange}
+        >
+          <Button variant="outline">
+            {settings.sessionLength}/{settings.breakLength}min
+          </Button>
+        </PomodoroSettingsDialog>
       </div>
     </div>
   );
