@@ -4,3 +4,11 @@ export interface Session {
   description?: string;
   completed: boolean;
 }
+
+export type SessionState = {
+  sessions: Session[];
+  completedBreakCount: number;
+  onBreakProps?: {
+    breakStartDate: Date;
+  };
+};

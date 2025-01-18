@@ -54,7 +54,7 @@ const SessionPlanner = () => {
   const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
   const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
   const completedSessions = useAtomValue(completedSessionsAtom);
-  const sessions = useAtomValue(sessionsAtom);
+  const { sessions } = useAtomValue(sessionsAtom);
 
   const moveSession = useSetAtom(moveSessionAtom);
 
