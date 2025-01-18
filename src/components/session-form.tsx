@@ -59,20 +59,25 @@ export const SessionForm: React.FC<SessionFormProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row items-center gap-2">
         <Input
           {...register("description")}
           type="text"
           placeholder="Enter session description (optional)..."
           className="flex-1"
         />
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="w-full md:w-auto"
+            >
               Cancel
             </Button>
           )}
-          <Button type="submit">
+          <Button type="submit" className="w-full! md:!w-auto">
             {submitIcon}
             {submitLabel}
           </Button>
