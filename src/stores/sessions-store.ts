@@ -4,6 +4,8 @@ import { STORAGE_KEYS } from "./constants";
 import { v4 as uuidv4 } from "uuid";
 import { arrayMove } from "@dnd-kit/sortable";
 import { atom } from "jotai";
+import { pomodoroSettingsAtom } from "./settings-store";
+import { getBreakLength } from "@/lib/utils";
 
 // Base sessions atom
 export const sessionsAtom = atomWithStorage<SessionState>(
@@ -106,9 +108,28 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const newSessions = [...sessionsState.sessions];
   newSessions.splice(index, 1);
   newSessions.push(updatedSession);
+
+  const breakLength = getBreakLength(
+    get(pomodoroSettingsAtom),
+    sessionsState.completedBreakCount
+  );
+
   set(sessionsAtom, {
     ...sessionsState,
     sessions: newSessions,
+    onBreakProps: {
+      breakStartDate: new Date(),
+      title: `${breakLength} minute break`,
+    },
+  });
+});
+
+export const completeBreakAtom = atom(null, (get, set) => {
+  const sessionsState = get(sessionsAtom);
+  set(sessionsAtom, {
+    ...sessionsState,
+    completedBreakCount: sessionsState.completedBreakCount + 1,
+    onBreakProps: undefined,
   });
 });
 

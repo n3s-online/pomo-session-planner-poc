@@ -1,9 +1,8 @@
-import { useMemo } from "react";
-import { Session } from "@/types/session";
 import { SessionCard } from "@/components/session-card";
 import { CreateSessionCard } from "@/components/create-session-card";
-import { PomodoroSettings } from "@/types/pomodoro";
 import { PomodoroSettingsComponent } from "@/components/pomodoro-settings";
+import { BreakCard } from "@/components/break-card";
+import { PomodoroStats } from "@/components/pomodoro-stats";
 import {
   DndContext,
   closestCenter,
@@ -17,7 +16,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { pomodoroSettingsAtom } from "@/stores/settings-store";
 import {
   nonCompletedSessionsAtom,
   completedSessionsAtom,
@@ -26,50 +24,12 @@ import {
 } from "@/stores/sessions-store";
 import { useAtomValue, useSetAtom } from "jotai";
 
-type SessionStats = {
-  hoursRemaining: number;
-  minutesRemaining: number;
-  count: number;
-};
-
-function calcSessionStats(
-  sessionsList: Session[],
-  settings: PomodoroSettings
-): SessionStats {
-  const totalMinutes = sessionsList.reduce((sum, _, idx) => {
-    if (idx === sessionsList.length - 1) {
-      return sum + settings.sessionLength;
-    }
-    return sum + settings.sessionLength + settings.breakLength;
-  }, 0);
-
-  return {
-    hoursRemaining: Math.floor(totalMinutes / 60),
-    minutesRemaining: totalMinutes % 60,
-    count: sessionsList.length,
-  };
-}
-
 const SessionPlanner = () => {
-  const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
   const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
   const completedSessions = useAtomValue(completedSessionsAtom);
-  const { sessions } = useAtomValue(sessionsAtom);
+  const { sessions, onBreakProps } = useAtomValue(sessionsAtom);
 
   const moveSession = useSetAtom(moveSessionAtom);
-
-  const { pendingSessionStats, completedSessionStats } = useMemo(() => {
-    return {
-      pendingSessionStats: calcSessionStats(
-        nonCompletedSessions,
-        pomodoroSettings
-      ),
-      completedSessionStats: calcSessionStats(
-        completedSessions,
-        pomodoroSettings
-      ),
-    };
-  }, [pomodoroSettings, nonCompletedSessions, completedSessions]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -90,23 +50,7 @@ const SessionPlanner = () => {
       <div className="space-y-4">
         <div className="flex gap-4 flex-col md:flex-row justify-between items-start">
           <div className="w-full">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Session Planner
-            </h1>
-            <div className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
-              <div>{pendingSessionStats.count} remaining sessions</div>
-              <div>
-                {pendingSessionStats.hoursRemaining}hr{" "}
-                {pendingSessionStats.minutesRemaining}min
-              </div>
-            </div>
-            <p className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
-              <div>{completedSessionStats.count} completed sessions</div>
-              <div>
-                {completedSessionStats.hoursRemaining}hr{" "}
-                {completedSessionStats.minutesRemaining}min
-              </div>
-            </p>
+            <PomodoroStats />
           </div>
           <div className="flex flex-col gap-4 items-center min-w-[300px]">
             <PomodoroSettingsComponent />
@@ -115,6 +59,8 @@ const SessionPlanner = () => {
       </div>
 
       <div className="space-y-4">
+        {onBreakProps && <BreakCard breakProps={onBreakProps} />}
+
         <DndContext
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
@@ -128,7 +74,7 @@ const SessionPlanner = () => {
               <SessionCard
                 key={session.id}
                 session={session}
-                activeSession={index === 0}
+                activeSession={!onBreakProps && index === 0}
               />
             ))}
           </SortableContext>
