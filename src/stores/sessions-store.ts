@@ -101,10 +101,15 @@ export const addSessionAtom = atom(
 
 export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
+  const settingsState = get(pomodoroSettingsAtom);
   const index = sessionsState.sessions.findIndex((s) => s.id === id);
   if (index === -1) return;
 
-  const updatedSession = { ...sessionsState.sessions[index], completed: true };
+  const updatedSession: Session = {
+    ...sessionsState.sessions[index],
+    completed: true,
+    actualLength: settingsState.sessionLength,
+  };
   const newSessions = [...sessionsState.sessions];
   newSessions.splice(index, 1);
   newSessions.push(updatedSession);
