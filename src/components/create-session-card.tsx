@@ -2,16 +2,14 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Session } from "@/types/session";
 import { SessionForm } from "./session-form";
+import { useSetAtom } from "jotai";
+import { addSessionAtom } from "@/stores/sessions-store";
 
-interface CreateSessionCardProps {
-  onNewSession: (session: Omit<Session, "id">) => void;
-}
+export const CreateSessionCard: React.FC = () => {
+  const addSession = useSetAtom(addSessionAtom);
 
-export const CreateSessionCard: React.FC<CreateSessionCardProps> = ({
-  onNewSession,
-}) => {
   const handleSubmit = (data: Omit<Session, "id" | "completed">) => {
-    onNewSession({ ...data, completed: false });
+    addSession(data);
   };
 
   return (

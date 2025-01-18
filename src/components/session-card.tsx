@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GripVertical, X, ChevronDown, Pencil, Save } from "lucide-react";
@@ -11,23 +11,21 @@ import { Session } from "@/types/session";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SessionForm } from "./session-form";
+import { useSetAtom } from "jotai";
+import {
+  deleteSessionAtom,
+  completeSessionAtom,
+  editSessionAtom,
+} from "@/stores/sessions-store";
 
 interface SessionCardProps {
   session: Session;
   activeSession: boolean;
-  onDismiss?: () => void;
-  onDelete: () => void;
-  onComplete: () => void;
-  onEdit: (id: string, updates: Partial<Session>) => void;
 }
 
 export const SessionCard: React.FC<SessionCardProps> = ({
   session,
   activeSession,
-  onDismiss,
-  onDelete,
-  onComplete,
-  onEdit,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const {
@@ -56,14 +54,24 @@ export const SessionCard: React.FC<SessionCardProps> = ({
       .join(", "),
   };
 
-  const handleEdit = (data: Omit<Session, "id" | "completed">) => {
-    onEdit(session.id, data);
-    setIsEditing(false);
-  };
+  const deleteSession = useSetAtom(deleteSessionAtom);
+  const completeSession = useSetAtom(completeSessionAtom);
+  const editSession = useSetAtom(editSessionAtom);
+
+  const handleDelete = () => deleteSession(session.id);
+  const handleComplete = () => completeSession(session.id);
+  const handleEdit = (updates: Partial<Session>) =>
+    editSession({ id: session.id, updates });
 
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
+
+  useEffect(() => {
+    if (activeSession && isEditing) {
+      setIsEditing(false);
+    }
+  }, [isEditing, activeSession]);
 
   return (
     <div
@@ -152,7 +160,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <Button
                     variant="destructive"
                     className="w-full"
-                    onClick={onDismiss}
+                    onClick={handleDelete}
                     size="responsive"
                   >
                     <X className="w-4 h-4 mr-2" />
@@ -162,7 +170,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <Button
                     variant="default"
                     className="w-full"
-                    onClick={onComplete}
+                    onClick={handleComplete}
                     size="responsive"
                   >
                     Complete
@@ -190,7 +198,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-gray-500 hover:text-red-600"
-                  onClick={onDelete}
+                  onClick={handleDelete}
                 >
                   <X className="h-4 w-4" />
                 </Button>

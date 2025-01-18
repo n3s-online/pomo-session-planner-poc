@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Session } from "@/types/session";
 import { SessionCard } from "@/components/session-card";
 import { CreateSessionCard } from "@/components/create-session-card";
@@ -16,11 +16,15 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { pomodoroSettingsAtom } from "@/stores/settings-store";
-import { useAtomValue } from "jotai";
-import { STORAGE_KEYS } from "@/stores/constants";
+import {
+  nonCompletedSessionsAtom,
+  completedSessionsAtom,
+  moveSessionAtom,
+  sessionsAtom,
+} from "@/stores/sessions-store";
+import { useAtomValue, useSetAtom } from "jotai";
 
 type SessionStats = {
   hoursRemaining: number;
@@ -48,113 +52,36 @@ function calcSessionStats(
 
 const SessionPlanner = () => {
   const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
-  const [sessions, setSessions] = useState<Session[]>(() => {
-    const savedSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
-    return savedSessions
-      ? JSON.parse(savedSessions)
-      : [
-          { id: "1", title: "Product Team Sync" },
-          { id: "2", title: "Feature Development" },
-          { id: "3", title: "Code Review & Documentation" },
-          { id: "4", title: "Sprint Planning" },
-        ];
-  });
+  const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
+  const completedSessions = useAtomValue(completedSessionsAtom);
+  const sessions = useAtomValue(sessionsAtom);
+
+  const moveSession = useSetAtom(moveSessionAtom);
 
   const { pendingSessionStats, completedSessionStats } = useMemo(() => {
-    const nonCompleted = sessions.filter((s) => !s.completed);
-    const done = sessions.filter((s) => s.completed);
-
     return {
-      pendingSessionStats: calcSessionStats(nonCompleted, pomodoroSettings),
-      completedSessionStats: calcSessionStats(done, pomodoroSettings),
+      pendingSessionStats: calcSessionStats(
+        nonCompletedSessions,
+        pomodoroSettings
+      ),
+      completedSessionStats: calcSessionStats(
+        completedSessions,
+        pomodoroSettings
+      ),
     };
-  }, [pomodoroSettings, sessions]);
-
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newSessions = [...sessions];
-    const draggedSession = newSessions[draggedIndex];
-    newSessions.splice(draggedIndex, 1);
-    newSessions.splice(index, 0, draggedSession);
-
-    setSessions(newSessions);
-    setDraggedIndex(index);
-  };
+  }, [pomodoroSettings, nonCompletedSessions, completedSessions]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setSessions((prev) => {
-      const oldIndex = prev.findIndex((s) => s.id === active.id);
-      const newIndex = prev.findIndex((s) => s.id === over.id);
-      return arrayMove(prev, oldIndex, newIndex);
-    });
-  };
+    const oldIndex = sessions.findIndex((s) => s.id === active.id);
+    const newIndex = sessions.findIndex((s) => s.id === over.id);
 
-  const handleDismiss = () => {
-    if (sessions.length > 0) {
-      setSessions(sessions.slice(1));
+    if (oldIndex !== -1 && newIndex !== -1) {
+      moveSession({ oldIndex, newIndex });
     }
   };
-
-  const handleDelete = (id: string) => {
-    setSessions(sessions.filter((session) => session.id !== id));
-  };
-
-  const handleNewSession = (sessionData: Omit<Session, "id">) => {
-    setSessions([
-      ...sessions,
-      {
-        id: Date.now().toString(),
-        ...sessionData,
-        completed: false,
-      },
-    ]);
-  };
-
-  const handleComplete = (id: string) => {
-    setSessions((prevSessions) => {
-      const index = prevSessions.findIndex((s) => s.id === id);
-      if (index === -1) return prevSessions;
-      const updatedSession = { ...prevSessions[index], completed: true };
-      const newSessions = [...prevSessions];
-      newSessions.splice(index, 1);
-      newSessions.push(updatedSession);
-      return newSessions;
-    });
-  };
-
-  const handleKeepNonCompleted = () => {
-    setSessions((prev) => prev.filter((s) => !s.completed));
-  };
-
-  const handleDeleteAll = () => {
-    setSessions([]);
-  };
-
-  const handleEdit = (id: string, updates: Partial<Session>) => {
-    setSessions((prevSessions) =>
-      prevSessions.map((session) =>
-        session.id === id ? { ...session, ...updates } : session
-      )
-    );
-  };
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
-  }, [sessions]);
-
-  const nonCompletedSessions = sessions.filter((s) => !s.completed);
-  const completedSessions = sessions.filter((s) => s.completed);
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
@@ -182,11 +109,7 @@ const SessionPlanner = () => {
             </p>
           </div>
           <div className="flex flex-col gap-4 items-center min-w-[300px]">
-            <PomodoroSettingsComponent
-              hasNonCompletedSessions={nonCompletedSessions.length > 0}
-              onKeepNonCompleted={handleKeepNonCompleted}
-              onDeleteAll={handleDeleteAll}
-            />
+            <PomodoroSettingsComponent />
           </div>
         </div>
       </div>
@@ -206,26 +129,18 @@ const SessionPlanner = () => {
                 key={session.id}
                 session={session}
                 activeSession={index === 0}
-                onDismiss={index === 0 ? handleDismiss : undefined}
-                onDelete={() => handleDelete(session.id)}
-                onComplete={() => handleComplete(session.id)}
-                onEdit={handleEdit}
               />
             ))}
           </SortableContext>
         </DndContext>
 
-        <CreateSessionCard onNewSession={handleNewSession} />
+        <CreateSessionCard />
 
         {completedSessions.map((session, index) => (
           <SessionCard
             key={session.id}
             session={session}
             activeSession={false}
-            onDismiss={index === 0 ? handleDismiss : undefined}
-            onDelete={() => handleDelete(session.id)}
-            onComplete={() => handleComplete(session.id)}
-            onEdit={handleEdit}
           />
         ))}
       </div>

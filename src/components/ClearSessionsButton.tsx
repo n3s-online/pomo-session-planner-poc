@@ -9,16 +9,17 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  deleteAllSessionsAtom,
+  deleteAllCompletedSessionsAtom,
+  nonCompletedSessionsAtom,
+} from "@/stores/sessions-store";
 
-export function ClearSessionsButton({
-  hasNonCompletedSessions,
-  onKeepNonCompleted,
-  onDeleteAll,
-}: {
-  hasNonCompletedSessions: boolean;
-  onKeepNonCompleted: () => void;
-  onDeleteAll: () => void;
-}) {
+export function ClearSessionsButton() {
+  const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
+  const deleteAllCompletedSessions = useSetAtom(deleteAllCompletedSessionsAtom);
+  const deleteAllSessions = useSetAtom(deleteAllSessionsAtom);
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,11 +32,11 @@ export function ClearSessionsButton({
           <DialogTitle>Clear Sessions</DialogTitle>
         </DialogHeader>
         <DialogFooter className="flex flex-col md:flex-row gap-2">
-          {hasNonCompletedSessions ? (
+          {nonCompletedSessions.length > 0 ? (
             <>
               <Button
                 onClick={() => {
-                  onKeepNonCompleted();
+                  deleteAllCompletedSessions();
                   setOpen(false);
                 }}
                 variant="destructive"
@@ -44,7 +45,7 @@ export function ClearSessionsButton({
               </Button>
               <Button
                 onClick={() => {
-                  onDeleteAll();
+                  deleteAllSessions();
                   setOpen(false);
                 }}
                 variant="destructive"
@@ -59,7 +60,7 @@ export function ClearSessionsButton({
             <>
               <Button
                 onClick={() => {
-                  onDeleteAll();
+                  deleteAllSessions();
                   setOpen(false);
                 }}
                 variant="destructive"
