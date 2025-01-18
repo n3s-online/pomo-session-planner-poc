@@ -66,10 +66,14 @@ const SessionPlanner = () => {
       const settings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       return settings
         ? JSON.parse(settings)
-        : {
+        : ({
             sessionLength: 25,
             breakLength: 5,
-          };
+            longerBreaks: {
+              frequency: 3,
+              length: 15,
+            },
+          } satisfies PomodoroSettings);
     }
   );
 
