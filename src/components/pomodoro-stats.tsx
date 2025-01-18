@@ -48,11 +48,10 @@ function calculateCompletedSessionStats(
   for (const session of completedSessions) {
     const sessionLength = session.actualLength || settings.sessionLength;
     totalMinutes += sessionLength;
+    if (session.breakAfterLength) {
+      totalMinutes += session.breakAfterLength;
+    }
   }
-  totalMinutes += sessionState.completedBreaks.reduce(
-    (acc, b) => acc + b.minutesDuration,
-    0
-  );
   return convertTotalMinutes(totalMinutes);
 }
 

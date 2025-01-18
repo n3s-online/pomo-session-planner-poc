@@ -4,6 +4,7 @@ export interface Session {
   description?: string;
   completed: boolean;
   actualLength?: number;
+  breakAfterLength?: number;
 }
 
 export interface CompletedBreak {

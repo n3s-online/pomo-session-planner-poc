@@ -135,8 +135,28 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
 export const completeBreakAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
   if (!sessionsState.onBreakProps?.minutesDuration) return;
+  let sessionToAttributeBreakTo = null;
+  for (const session of sessionsState.sessions) {
+    if (session.completed) {
+      sessionToAttributeBreakTo = session;
+    }
+  }
+
+  const newSessions = [...sessionsState.sessions];
+  if (sessionToAttributeBreakTo) {
+    const updatedSession = {
+      ...sessionToAttributeBreakTo,
+      breakAfterLength: sessionsState.onBreakProps.minutesDuration,
+    };
+    const index = newSessions.findIndex(
+      (s) => s.id === sessionToAttributeBreakTo.id
+    );
+    newSessions[index] = updatedSession;
+  }
+
   set(sessionsAtom, {
     ...sessionsState,
+    sessions: newSessions,
     completedBreaks: [
       ...sessionsState.completedBreaks,
       { minutesDuration: sessionsState.onBreakProps.minutesDuration },

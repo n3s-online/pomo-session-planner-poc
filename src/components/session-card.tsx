@@ -137,7 +137,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                       {session.title}
                       {session.completed && session.actualLength && (
                         <span className="ml-2 text-sm text-gray-500">
-                          ({session.actualLength} min)
+                          ({session.actualLength} min
+                          {session.breakAfterLength &&
+                            ` + ${session.breakAfterLength} min break`}
+                          )
                         </span>
                       )}
                     </h3>
