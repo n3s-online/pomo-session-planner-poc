@@ -18,11 +18,9 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-
-const STORAGE_KEYS = {
-  SESSIONS: "SessionPlanner_sessions",
-  SETTINGS: "SessionPlanner_pomodoroSettings",
-} as const;
+import { pomodoroSettingsAtom } from "@/stores/settings-store";
+import { useAtomValue } from "jotai";
+import { STORAGE_KEYS } from "@/stores/constants";
 
 type SessionStats = {
   hoursRemaining: number;
@@ -49,6 +47,7 @@ function calcSessionStats(
 }
 
 const SessionPlanner = () => {
+  const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
   const [sessions, setSessions] = useState<Session[]>(() => {
     const savedSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     return savedSessions
@@ -60,22 +59,6 @@ const SessionPlanner = () => {
           { id: "4", title: "Sprint Planning" },
         ];
   });
-
-  const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(
-    () => {
-      const settings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return settings
-        ? JSON.parse(settings)
-        : ({
-            sessionLength: 25,
-            breakLength: 5,
-            longerBreaks: {
-              frequency: 3,
-              length: 15,
-            },
-          } satisfies PomodoroSettings);
-    }
-  );
 
   const { pendingSessionStats, completedSessionStats } = useMemo(() => {
     const nonCompleted = sessions.filter((s) => !s.completed);
@@ -170,13 +153,6 @@ const SessionPlanner = () => {
     localStorage.setItem(STORAGE_KEYS.SESSIONS, JSON.stringify(sessions));
   }, [sessions]);
 
-  useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEYS.SETTINGS,
-      JSON.stringify(pomodoroSettings)
-    );
-  }, [pomodoroSettings]);
-
   const nonCompletedSessions = sessions.filter((s) => !s.completed);
   const completedSessions = sessions.filter((s) => s.completed);
 
@@ -207,10 +183,6 @@ const SessionPlanner = () => {
           </div>
           <div className="flex flex-col gap-4 items-center min-w-[300px]">
             <PomodoroSettingsComponent
-              settings={pomodoroSettings}
-              onSettingsChange={(newSettings: PomodoroSettings) =>
-                setPomodoroSettings(newSettings)
-              }
               hasNonCompletedSessions={nonCompletedSessions.length > 0}
               onKeepNonCompleted={handleKeepNonCompleted}
               onDeleteAll={handleDeleteAll}

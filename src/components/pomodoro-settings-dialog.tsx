@@ -19,6 +19,8 @@ import { PomodoroSettings } from "@/types/pomodoro";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { useAtom } from "jotai";
+import { pomodoroSettingsAtom } from "@/stores/settings-store";
 
 type FormValues = PomodoroSettings & {
   enableLongerBreaks: boolean;
@@ -29,33 +31,24 @@ const BREAK_LENGTH_OPTIONS = [3, 5, 8, 10, 15, 20, 30];
 
 interface PomodoroSettingsDialogProps {
   children: React.ReactNode;
-  settings: PomodoroSettings;
-  onSettingsChange: (settings: PomodoroSettings) => void;
 }
 
 export function PomodoroSettingsDialog({
   children,
-  settings,
-  onSettingsChange,
 }: PomodoroSettingsDialogProps) {
+  const [pomodoroSettings, setPomodoroSettings] = useAtom(pomodoroSettingsAtom);
   const [open, setOpen] = React.useState(false);
   const form = useForm<FormValues>({
     defaultValues: {
-      enableLongerBreaks: true,
-      longerBreaks: {
-        frequency: 3,
-        length: 15,
-      },
-      ...settings,
+      enableLongerBreaks: !!pomodoroSettings.longerBreaks,
+      ...pomodoroSettings,
     },
   });
 
   const watchEnableLongerBreaks = form.watch("enableLongerBreaks");
 
-  const onSubmit = (data: FormValues) => {
-    onSettingsChange({
-      ...data,
-    });
+  const onSubmit = ({ enableLongerBreaks, ...data }: FormValues) => {
+    setPomodoroSettings(data);
     setOpen(false);
   };
 
