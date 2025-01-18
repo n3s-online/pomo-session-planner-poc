@@ -31,6 +31,7 @@ export function ClearSessionsButton() {
         <DialogHeader>
           <DialogTitle>Clear Sessions</DialogTitle>
         </DialogHeader>
+        Clear existing sessions. Your break count will reset as well.
         <DialogFooter className="flex flex-col md:flex-row gap-2">
           {nonCompletedSessions.length > 0 ? (
             <>

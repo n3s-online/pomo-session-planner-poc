@@ -16,7 +16,7 @@ export const BreakCard: React.FC<BreakCardProps> = ({ breakProps }) => {
       <CardContent className="p-4">
         <div className="space-y-2 text-center">
           <h3 className="font-medium text-xl text-gray-900">
-            {breakProps.title}
+            {breakProps.minutesDuration} Minute Break
           </h3>
         </div>
       </CardContent>

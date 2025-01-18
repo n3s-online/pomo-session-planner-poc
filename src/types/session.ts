@@ -5,13 +5,17 @@ export interface Session {
   completed: boolean;
 }
 
+export interface CompletedBreak {
+  minutesDuration: number;
+}
+
 export interface BreakProps {
   breakStartDate: Date;
-  title: string;
+  minutesDuration: number;
 }
 
 export type SessionState = {
   sessions: Session[];
-  completedBreakCount: number;
+  completedBreaks: CompletedBreak[];
   onBreakProps?: BreakProps;
 };

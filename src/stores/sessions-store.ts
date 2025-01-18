@@ -11,7 +11,7 @@ import { getBreakLength } from "@/lib/utils";
 export const sessionsAtom = atomWithStorage<SessionState>(
   STORAGE_KEYS.SESSIONS,
   {
-    completedBreakCount: 0,
+    completedBreaks: [],
     sessions: [
       {
         id: uuidv4(),
@@ -111,24 +111,31 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
 
   const breakLength = getBreakLength(
     get(pomodoroSettingsAtom),
-    sessionsState.completedBreakCount
+    sessionsState.completedBreaks.length
   );
 
   set(sessionsAtom, {
     ...sessionsState,
     sessions: newSessions,
-    onBreakProps: {
-      breakStartDate: new Date(),
-      title: `${breakLength} minute break`,
-    },
+    onBreakProps:
+      newSessions.filter((session) => !session.completed).length > 0
+        ? {
+            breakStartDate: new Date(),
+            minutesDuration: breakLength,
+          }
+        : undefined,
   });
 });
 
 export const completeBreakAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
+  if (!sessionsState.onBreakProps?.minutesDuration) return;
   set(sessionsAtom, {
     ...sessionsState,
-    completedBreakCount: sessionsState.completedBreakCount + 1,
+    completedBreaks: [
+      ...sessionsState.completedBreaks,
+      { minutesDuration: sessionsState.onBreakProps.minutesDuration },
+    ],
     onBreakProps: undefined,
   });
 });
@@ -153,14 +160,14 @@ export const deleteAllCompletedSessionsAtom = atom(null, (get, set) => {
   const remainingSessions = sessionsState.sessions.filter((s) => !s.completed);
   set(sessionsAtom, {
     ...sessionsState,
-    completedBreakCount: 0,
+    completedBreaks: [],
     sessions: remainingSessions,
   });
 });
 
 export const deleteAllSessionsAtom = atom(null, (_, set) => {
   set(sessionsAtom, {
-    completedBreakCount: 0,
+    completedBreaks: [],
     sessions: [],
   });
 });
