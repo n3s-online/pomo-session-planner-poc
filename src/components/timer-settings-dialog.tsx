@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { TimerSettings } from "@/types/pomodoro";
 import { Button } from "@/components/ui/button";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { timerSettingsAtom } from "@/stores/settings-store";
 import {
   Dialog,
@@ -14,12 +14,14 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
+import { resetStartTimesAtom } from "@/stores/sessions-store";
 
 interface TimerSettingsDialogProps {
   children: React.ReactNode;
 }
 
 export function TimerSettingsDialog({ children }: TimerSettingsDialogProps) {
+  const resetStartTimes = useSetAtom(resetStartTimesAtom);
   const [timerSettings, setTimerSettings] = useAtom(timerSettingsAtom);
   const [open, setOpen] = React.useState(false);
   const form = useForm<TimerSettings>({
@@ -33,6 +35,9 @@ export function TimerSettingsDialog({ children }: TimerSettingsDialogProps) {
   }, [open, timerSettings, form]);
 
   const onSubmit = (data: TimerSettings) => {
+    if (data.enabled === true && timerSettings.enabled === false) {
+      resetStartTimes();
+    }
     setTimerSettings(data);
     setOpen(false);
     form.reset(data);
@@ -70,6 +75,16 @@ export function TimerSettingsDialog({ children }: TimerSettingsDialogProps) {
             </div>
           </div>
           <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={(e) => {
+                e.preventDefault();
+                resetStartTimes();
+                setOpen(false);
+              }}
+            >
+              Reset Timer
+            </Button>
             <Button type="submit">Save changes</Button>
           </DialogFooter>
         </form>

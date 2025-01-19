@@ -232,3 +232,27 @@ export const deleteAllSessionsAtom = atom(null, (_, set) => {
     completedSessions: [],
   });
 });
+
+export const resetStartTimesAtom = atom(null, (get, set) => {
+  const sessionsState = get(sessionsAtom);
+
+  if (sessionsState.onBreakProps) {
+    set(sessionsAtom, {
+      ...sessionsState,
+      onBreakProps: {
+        ...sessionsState.onBreakProps,
+        breakStartDate: new Date(),
+      },
+    });
+    return;
+  }
+
+  if (sessionsState.pendingSessions.length > 0) {
+    const newPendingSessions = [...sessionsState.pendingSessions];
+    newPendingSessions[0].sessionStartDate = new Date();
+    set(sessionsAtom, {
+      ...sessionsState,
+      pendingSessions: newPendingSessions,
+    });
+  }
+});

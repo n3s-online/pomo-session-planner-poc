@@ -1,15 +1,17 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BreakProps } from "@/types/session";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { completeBreakAtom } from "@/stores/sessions-store";
 import { useElapsedTime } from "@/hooks/useElapsedTime";
+import { timerSettingsAtom } from "@/stores/settings-store";
 
 interface BreakCardProps {
   breakProps: BreakProps;
 }
 
 export const BreakCard: React.FC<BreakCardProps> = ({ breakProps }) => {
+  const timerSettings = useAtomValue(timerSettingsAtom);
   const completeBreak = useSetAtom(completeBreakAtom);
   const elapsedTime = useElapsedTime(
     breakProps.breakStartDate && new Date(breakProps.breakStartDate)
@@ -22,7 +24,7 @@ export const BreakCard: React.FC<BreakCardProps> = ({ breakProps }) => {
           <h3 className="font-medium text-xl text-gray-900">
             {breakProps.minutesDuration} Minute Break
           </h3>
-          {elapsedTime && (
+          {timerSettings.enabled && elapsedTime && (
             <p className="text-gray-600">
               {elapsedTime.minutes}:
               {elapsedTime.seconds.toString().padStart(2, "0")}

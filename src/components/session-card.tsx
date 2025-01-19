@@ -11,13 +11,14 @@ import { PendingSession, Session } from "@/types/session";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SessionForm } from "./session-form";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   deleteSessionAtom,
   completeSessionAtom,
   editSessionAtom,
 } from "@/stores/sessions-store";
 import { useElapsedTime } from "@/hooks/useElapsedTime";
+import { timerSettingsAtom } from "@/stores/settings-store";
 
 interface SessionCardProps {
   session: Session;
@@ -28,6 +29,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   session,
   activeSession,
 }) => {
+  const timerSettings = useAtomValue(timerSettingsAtom);
   const [isEditing, setIsEditing] = useState(false);
   const elapsedTime = useElapsedTime(
     session.sessionStartDate && new Date(session.sessionStartDate)
@@ -129,7 +131,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                     <h3 className="font-medium text-lg text-gray-900">
                       {session.title}
                     </h3>
-                    {session.sessionStartDate && (
+                    {timerSettings.enabled && session.sessionStartDate && (
                       <span className="text-sm font-medium text-gray-600">
                         {elapsedTime?.minutes}:
                         {elapsedTime?.seconds.toString().padStart(2, "0")}
