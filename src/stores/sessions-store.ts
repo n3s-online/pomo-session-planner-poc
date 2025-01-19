@@ -18,23 +18,27 @@ export const sessionsAtom = atomWithStorage<SessionState>(
         title: "Code Review and Bug Fixing",
         description: "Review pull requests and address assigned bugs.",
         completed: false,
+        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
         title: "Complete ReactJS Tutorial",
         completed: false,
+        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
         title: "Plan and Write Documentation",
         description: "Draft or improve project documentation or user guides.",
         completed: false,
+        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
         title: "Debug and Optimize Code",
         description: "Debug specific issues or optimize code for performance.",
         completed: false,
+        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
@@ -42,6 +46,7 @@ export const sessionsAtom = atomWithStorage<SessionState>(
         description:
           "Organize your task list or backlog and prioritize upcoming work.",
         completed: false,
+        sessionStartDate: new Date(),
       },
     ],
   }
@@ -93,6 +98,7 @@ export const addSessionAtom = atom(
           id: uuidv4(),
           ...sessionData,
           completed: false,
+          sessionStartDate: new Date(),
         },
       ],
     });
@@ -108,7 +114,8 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const updatedSession: Session = {
     ...sessionsState.sessions[index],
     completed: true,
-    actualLength: settingsState.sessionLength,
+    sessionEndDate: new Date(),
+    actualLength: settingsState.sessionLength, // TODO: Implement actual length (if toggled)
   };
   const newSessions = [...sessionsState.sessions];
   newSessions.splice(index, 1);
@@ -159,7 +166,11 @@ export const completeBreakAtom = atom(null, (get, set) => {
     sessions: newSessions,
     completedBreaks: [
       ...sessionsState.completedBreaks,
-      { minutesDuration: sessionsState.onBreakProps.minutesDuration },
+      {
+        minutesDuration: sessionsState.onBreakProps.minutesDuration,
+        breakStartDate: sessionsState.onBreakProps.breakStartDate,
+        breakEndDate: new Date(),
+      },
     ],
     onBreakProps: undefined,
   });
