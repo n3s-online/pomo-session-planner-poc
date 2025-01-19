@@ -6,3 +6,8 @@ export interface PomodoroSettings {
     length: number;
   };
 }
+
+export type TimerSettings = {
+  enabled: boolean;
+  useTimerForStats: boolean;
+};
