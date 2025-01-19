@@ -149,14 +149,15 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                   <div className="flex justify-between items-center">
                     <h3 className="font-medium text-lg text-gray-900">
                       {session.title}
-                      {session.completed && session.actualLength && (
-                        <span className="ml-2 text-sm text-gray-500">
-                          ({session.actualLength} min
-                          {session.breakAfterLength &&
-                            ` + ${session.breakAfterLength} min break`}
-                          )
-                        </span>
-                      )}
+                      {session.completed &&
+                        session.actualLength !== undefined && (
+                          <span className="ml-2 text-sm text-gray-500">
+                            ({session.actualLength} min
+                            {session.breakAfterLength !== undefined &&
+                              ` + ${session.breakAfterLength} min break`}
+                            )
+                          </span>
+                        )}
                     </h3>
                     {session.description && (
                       <CollapsibleTrigger asChild>

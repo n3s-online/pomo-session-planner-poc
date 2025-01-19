@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from "./constants";
 import { v4 as uuidv4 } from "uuid";
 import { arrayMove } from "@dnd-kit/sortable";
 import { atom } from "jotai";
-import { pomodoroSettingsAtom } from "./settings-store";
+import { pomodoroSettingsAtom, timerSettingsAtom } from "./settings-store";
 import { getBreakLength } from "@/lib/utils";
 
 // Base sessions atom
@@ -114,15 +114,28 @@ export const addSessionAtom = atom(
 export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
   const settingsState = get(pomodoroSettingsAtom);
+  const timerSettings = get(timerSettingsAtom);
   const index = sessionsState.pendingSessions.findIndex((s) => s.id === id);
   if (index === -1) return;
 
   const previousPendingSession = sessionsState.pendingSessions[index];
+
+  const sessionEndDate = new Date();
+  const actualLengthInMinutes: number =
+    timerSettings.enabled &&
+    timerSettings.useTimerForStats &&
+    !!previousPendingSession.sessionStartDate
+      ? Math.round(
+          (sessionEndDate.getTime() -
+            new Date(previousPendingSession.sessionStartDate).getTime()) /
+            (1000 * 60)
+        )
+      : settingsState.sessionLength;
   const completedSession: CompletedSession = {
     ...previousPendingSession,
     completed: true,
-    sessionEndDate: new Date(),
-    actualLength: settingsState.sessionLength, // TODO: Implement actual length (if toggled)
+    sessionEndDate,
+    actualLength: actualLengthInMinutes,
   };
 
   const newPendingSessions = [...sessionsState.pendingSessions];
@@ -157,7 +170,21 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
 
 export const completeBreakAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
+  const timerSettings = get(timerSettingsAtom);
   if (!sessionsState.onBreakProps?.minutesDuration) return;
+
+  const breakEndDate = new Date();
+  const actualMinutesDuration =
+    timerSettings.enabled &&
+    timerSettings.useTimerForStats &&
+    !!sessionsState.onBreakProps.breakStartDate
+      ? Math.round(
+          (breakEndDate.getTime() -
+            new Date(sessionsState.onBreakProps.breakStartDate).getTime()) /
+            (1000 * 60)
+        )
+      : sessionsState.onBreakProps.minutesDuration;
+
   const sessionToAttributeBreakTo =
     sessionsState.completedSessions.length > 0
       ? sessionsState.completedSessions[
@@ -169,7 +196,7 @@ export const completeBreakAtom = atom(null, (get, set) => {
   if (sessionToAttributeBreakTo) {
     const updatedSession = {
       ...sessionToAttributeBreakTo,
-      breakAfterLength: sessionsState.onBreakProps.minutesDuration,
+      breakAfterLength: actualMinutesDuration,
     };
     const index = newCompletedSessions.findIndex(
       (s) => s.id === sessionToAttributeBreakTo.id
@@ -188,9 +215,9 @@ export const completeBreakAtom = atom(null, (get, set) => {
     completedBreaks: [
       ...sessionsState.completedBreaks,
       {
-        minutesDuration: sessionsState.onBreakProps.minutesDuration,
+        minutesDuration: actualMinutesDuration,
         breakStartDate: sessionsState.onBreakProps.breakStartDate,
-        breakEndDate: new Date(),
+        breakEndDate,
       },
     ],
     onBreakProps: undefined,
