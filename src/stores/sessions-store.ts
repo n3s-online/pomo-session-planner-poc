@@ -1,4 +1,9 @@
-import { Session, SessionState } from "@/types/session";
+import {
+  CompletedSession,
+  PendingSession,
+  Session,
+  SessionState,
+} from "@/types/session";
 import { atomWithStorage } from "jotai/utils";
 import { STORAGE_KEYS } from "./constants";
 import { v4 as uuidv4 } from "uuid";
@@ -12,7 +17,7 @@ export const sessionsAtom = atomWithStorage<SessionState>(
   STORAGE_KEYS.SESSIONS,
   {
     completedBreaks: [],
-    sessions: [
+    pendingSessions: [
       {
         id: uuidv4(),
         title: "Code Review and Bug Fixing",
@@ -24,21 +29,18 @@ export const sessionsAtom = atomWithStorage<SessionState>(
         id: uuidv4(),
         title: "Complete ReactJS Tutorial",
         completed: false,
-        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
         title: "Plan and Write Documentation",
         description: "Draft or improve project documentation or user guides.",
         completed: false,
-        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
         title: "Debug and Optimize Code",
         description: "Debug specific issues or optimize code for performance.",
         completed: false,
-        sessionStartDate: new Date(),
       },
       {
         id: uuidv4(),
@@ -46,19 +48,10 @@ export const sessionsAtom = atomWithStorage<SessionState>(
         description:
           "Organize your task list or backlog and prioritize upcoming work.",
         completed: false,
-        sessionStartDate: new Date(),
       },
     ],
+    completedSessions: [],
   }
-);
-
-// Derived state atoms
-export const completedSessionsAtom = atom((get) =>
-  get(sessionsAtom).sessions.filter((s) => s.completed)
-);
-
-export const nonCompletedSessionsAtom = atom((get) =>
-  get(sessionsAtom).sessions.filter((s) => !s.completed)
 );
 
 // Operation atoms
@@ -70,9 +63,19 @@ export const moveSessionAtom = atom(
     { oldIndex, newIndex }: { oldIndex: number; newIndex: number }
   ) => {
     const sessionsState = get(sessionsAtom);
+    const newPendingSessions = arrayMove(
+      sessionsState.pendingSessions,
+      oldIndex,
+      newIndex
+    );
+
+    if (oldIndex === 0 || (newIndex === 0 && oldIndex !== newIndex)) {
+      newPendingSessions[0].sessionStartDate = new Date();
+    }
+
     set(sessionsAtom, {
       ...sessionsState,
-      sessions: arrayMove(sessionsState.sessions, oldIndex, newIndex),
+      pendingSessions: newPendingSessions,
     });
   }
 );
@@ -81,7 +84,9 @@ export const deleteSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
   set(sessionsAtom, {
     ...sessionsState,
-    sessions: sessionsState.sessions.filter((session) => session.id !== id),
+    pendingSessions: sessionsState.pendingSessions.filter(
+      (session) => session.id !== id
+    ),
   });
 });
 
@@ -92,13 +97,14 @@ export const addSessionAtom = atom(
 
     set(sessionsAtom, {
       ...sessionsState,
-      sessions: [
-        ...sessionsState.sessions,
+      pendingSessions: [
+        ...sessionsState.pendingSessions,
         {
           id: uuidv4(),
           ...sessionData,
           completed: false,
-          sessionStartDate: new Date(),
+          sessionStartDate:
+            sessionsState.pendingSessions.length === 0 ? new Date() : undefined,
         },
       ],
     });
@@ -108,18 +114,27 @@ export const addSessionAtom = atom(
 export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
   const settingsState = get(pomodoroSettingsAtom);
-  const index = sessionsState.sessions.findIndex((s) => s.id === id);
+  const index = sessionsState.pendingSessions.findIndex((s) => s.id === id);
   if (index === -1) return;
 
-  const updatedSession: Session = {
-    ...sessionsState.sessions[index],
+  const previousPendingSession = sessionsState.pendingSessions[index];
+  const completedSession: CompletedSession = {
+    ...previousPendingSession,
     completed: true,
     sessionEndDate: new Date(),
     actualLength: settingsState.sessionLength, // TODO: Implement actual length (if toggled)
   };
-  const newSessions = [...sessionsState.sessions];
-  newSessions.splice(index, 1);
-  newSessions.push(updatedSession);
+
+  const newPendingSessions = [...sessionsState.pendingSessions];
+  newPendingSessions.splice(index, 1);
+  if (newPendingSessions.length > 0) {
+    newPendingSessions[0].sessionStartDate = new Date();
+  }
+
+  const newCompletedSessions = [
+    ...sessionsState.completedSessions,
+    completedSession,
+  ];
 
   const breakLength = getBreakLength(
     get(pomodoroSettingsAtom),
@@ -128,9 +143,10 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
 
   set(sessionsAtom, {
     ...sessionsState,
-    sessions: newSessions,
+    pendingSessions: newPendingSessions,
+    completedSessions: newCompletedSessions,
     onBreakProps:
-      newSessions.filter((session) => !session.completed).length > 0
+      newPendingSessions.length > 0
         ? {
             breakStartDate: new Date(),
             minutesDuration: breakLength,
@@ -142,28 +158,33 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
 export const completeBreakAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
   if (!sessionsState.onBreakProps?.minutesDuration) return;
-  let sessionToAttributeBreakTo = null;
-  for (const session of sessionsState.sessions) {
-    if (session.completed) {
-      sessionToAttributeBreakTo = session;
-    }
-  }
+  const sessionToAttributeBreakTo =
+    sessionsState.completedSessions.length > 0
+      ? sessionsState.completedSessions[
+          sessionsState.completedSessions.length - 1
+        ]
+      : null;
 
-  const newSessions = [...sessionsState.sessions];
+  const newCompletedSessions = [...sessionsState.completedSessions];
   if (sessionToAttributeBreakTo) {
     const updatedSession = {
       ...sessionToAttributeBreakTo,
       breakAfterLength: sessionsState.onBreakProps.minutesDuration,
     };
-    const index = newSessions.findIndex(
+    const index = newCompletedSessions.findIndex(
       (s) => s.id === sessionToAttributeBreakTo.id
     );
-    newSessions[index] = updatedSession;
+    newCompletedSessions[index] = updatedSession;
+  }
+
+  const newPendingSessions = [...sessionsState.pendingSessions];
+  if (newPendingSessions.length > 0) {
+    newPendingSessions[0].sessionStartDate = new Date();
   }
 
   set(sessionsAtom, {
     ...sessionsState,
-    sessions: newSessions,
+    completedSessions: newCompletedSessions,
     completedBreaks: [
       ...sessionsState.completedBreaks,
       {
@@ -178,11 +199,15 @@ export const completeBreakAtom = atom(null, (get, set) => {
 
 export const editSessionAtom = atom(
   null,
-  (get, set, { id, updates }: { id: string; updates: Partial<Session> }) => {
+  (
+    get,
+    set,
+    { id, updates }: { id: string; updates: Partial<PendingSession> }
+  ) => {
     const sessionsState = get(sessionsAtom);
-    const index = sessionsState.sessions.findIndex((s) => s.id === id);
+    const index = sessionsState.pendingSessions.findIndex((s) => s.id === id);
     if (index === -1) return;
-    const newSessions = [...sessionsState.sessions];
+    const newSessions = [...sessionsState.pendingSessions];
     newSessions[index] = { ...newSessions[index], ...updates };
     set(sessionsAtom, {
       ...sessionsState,
@@ -193,17 +218,17 @@ export const editSessionAtom = atom(
 
 export const deleteAllCompletedSessionsAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
-  const remainingSessions = sessionsState.sessions.filter((s) => !s.completed);
   set(sessionsAtom, {
     ...sessionsState,
     completedBreaks: [],
-    sessions: remainingSessions,
+    completedSessions: [],
   });
 });
 
 export const deleteAllSessionsAtom = atom(null, (_, set) => {
   set(sessionsAtom, {
     completedBreaks: [],
-    sessions: [],
+    pendingSessions: [],
+    completedSessions: [],
   });
 });

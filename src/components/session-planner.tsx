@@ -16,18 +16,12 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  nonCompletedSessionsAtom,
-  completedSessionsAtom,
-  moveSessionAtom,
-  sessionsAtom,
-} from "@/stores/sessions-store";
+import { moveSessionAtom, sessionsAtom } from "@/stores/sessions-store";
 import { useAtomValue, useSetAtom } from "jotai";
 
 const SessionPlanner = () => {
-  const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
-  const completedSessions = useAtomValue(completedSessionsAtom);
-  const { sessions, onBreakProps } = useAtomValue(sessionsAtom);
+  const { pendingSessions, completedSessions, onBreakProps } =
+    useAtomValue(sessionsAtom);
 
   const moveSession = useSetAtom(moveSessionAtom);
 
@@ -35,8 +29,8 @@ const SessionPlanner = () => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = sessions.findIndex((s) => s.id === active.id);
-    const newIndex = sessions.findIndex((s) => s.id === over.id);
+    const oldIndex = pendingSessions.findIndex((s) => s.id === active.id);
+    const newIndex = pendingSessions.findIndex((s) => s.id === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       moveSession({ oldIndex, newIndex });
@@ -67,10 +61,10 @@ const SessionPlanner = () => {
           sensors={sensors}
         >
           <SortableContext
-            items={nonCompletedSessions.map((s) => s.id)}
+            items={pendingSessions.map((s) => s.id)}
             strategy={verticalListSortingStrategy}
           >
-            {nonCompletedSessions.map((session, index) => (
+            {pendingSessions.map((session, index) => (
               <SessionCard
                 key={session.id}
                 session={session}

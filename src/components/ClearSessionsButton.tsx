@@ -13,11 +13,11 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   deleteAllSessionsAtom,
   deleteAllCompletedSessionsAtom,
-  nonCompletedSessionsAtom,
+  sessionsAtom,
 } from "@/stores/sessions-store";
 
 export function ClearSessionsButton() {
-  const nonCompletedSessions = useAtomValue(nonCompletedSessionsAtom);
+  const { pendingSessions } = useAtomValue(sessionsAtom);
   const deleteAllCompletedSessions = useSetAtom(deleteAllCompletedSessionsAtom);
   const deleteAllSessions = useSetAtom(deleteAllSessionsAtom);
   const [open, setOpen] = useState(false);
@@ -33,7 +33,7 @@ export function ClearSessionsButton() {
         </DialogHeader>
         Clear existing sessions. Your break count will reset as well.
         <DialogFooter className="flex flex-col md:flex-row gap-2">
-          {nonCompletedSessions.length > 0 ? (
+          {pendingSessions.length > 0 ? (
             <>
               <Button
                 onClick={() => {

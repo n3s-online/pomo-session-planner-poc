@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Session } from "@/types/session";
+import { PendingSession, Session } from "@/types/session";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SessionForm } from "./session-form";
@@ -17,6 +17,7 @@ import {
   completeSessionAtom,
   editSessionAtom,
 } from "@/stores/sessions-store";
+import { useElapsedTime } from "@/hooks/useElapsedTime";
 
 interface SessionCardProps {
   session: Session;
@@ -28,6 +29,9 @@ export const SessionCard: React.FC<SessionCardProps> = ({
   activeSession,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const elapsedTime = useElapsedTime(
+    session.sessionStartDate && new Date(session.sessionStartDate)
+  );
   const {
     attributes,
     listeners,
@@ -60,7 +64,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
   const handleDelete = () => deleteSession(session.id);
   const handleComplete = () => completeSession(session.id);
-  const handleEdit = (updates: Partial<Session>) =>
+  const handleEdit = (updates: Partial<PendingSession>) =>
     editSession({ id: session.id, updates });
 
   const handleCancelEdit = () => {
@@ -121,9 +125,17 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 />
               ) : activeSession ? (
                 <div className="space-y-2">
-                  <h3 className="font-medium text-lg text-gray-900">
-                    {session.title}
-                  </h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium text-lg text-gray-900">
+                      {session.title}
+                    </h3>
+                    {session.sessionStartDate && (
+                      <span className="text-sm font-medium text-gray-600">
+                        {elapsedTime?.minutes}:
+                        {elapsedTime?.seconds.toString().padStart(2, "0")}
+                      </span>
+                    )}
+                  </div>
                   {session.description && (
                     <p className="text-sm text-gray-500">
                       {session.description}

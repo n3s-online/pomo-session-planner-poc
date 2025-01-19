@@ -1,13 +1,22 @@
-export interface Session {
+type SessionBase = {
   id: string;
   title: string;
   description?: string;
   sessionStartDate?: Date;
-  sessionEndDate?: Date;
-  completed: boolean;
-  actualLength?: number;
+};
+
+export type PendingSession = SessionBase & {
+  completed: false;
+};
+
+export type CompletedSession = SessionBase & {
+  completed: true;
+  sessionEndDate: Date;
+  actualLength: number;
   breakAfterLength?: number;
-}
+};
+
+export type Session = PendingSession | CompletedSession;
 
 export interface CompletedBreak {
   minutesDuration: number;
@@ -22,7 +31,8 @@ export interface BreakProps {
 }
 
 export type SessionState = {
-  sessions: Session[];
+  pendingSessions: PendingSession[];
+  completedSessions: CompletedSession[];
   completedBreaks: CompletedBreak[];
   onBreakProps?: BreakProps;
 };

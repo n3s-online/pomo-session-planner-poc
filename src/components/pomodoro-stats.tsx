@@ -1,11 +1,7 @@
 import { SessionState } from "@/types/session";
 import { PomodoroSettings } from "@/types/pomodoro";
 import { useAtomValue } from "jotai";
-import {
-  nonCompletedSessionsAtom,
-  completedSessionsAtom,
-  sessionsAtom,
-} from "@/stores/sessions-store";
+import { sessionsAtom } from "@/stores/sessions-store";
 import { pomodoroSettingsAtom } from "@/stores/settings-store";
 import { getBreakLength } from "@/lib/utils";
 
@@ -31,20 +27,18 @@ function calculatePendingSessionStats(
     totalMinutes += sessionState.onBreakProps.minutesDuration;
     completedBreaks += 1;
   }
-  const remainingSessions = sessionState.sessions.filter((s) => !s.completed);
-  totalMinutes += remainingSessions.length * settings.sessionLength;
-  for (let i = 0; i < remainingSessions.length - 1; i++) {
+  totalMinutes += sessionState.pendingSessions.length * settings.sessionLength;
+  for (let i = 0; i < sessionState.pendingSessions.length - 1; i++) {
     totalMinutes += getBreakLength(settings, completedBreaks + i);
   }
   return convertTotalMinutes(totalMinutes);
 }
 
 function calculateCompletedSessionStats(
-  sessionState: SessionState,
+  { completedSessions }: SessionState,
   settings: PomodoroSettings
 ): SessionStats {
   let totalMinutes = 0;
-  const completedSessions = sessionState.sessions.filter((s) => s.completed);
   for (const session of completedSessions) {
     const sessionLength = session.actualLength || settings.sessionLength;
     totalMinutes += sessionLength;
@@ -58,8 +52,6 @@ function calculateCompletedSessionStats(
 export const PomodoroStats: React.FC = () => {
   const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
   const sessionsState = useAtomValue(sessionsAtom);
-  const pendingSessions = useAtomValue(nonCompletedSessionsAtom);
-  const completedSessions = useAtomValue(completedSessionsAtom);
   const { completedBreaks } = useAtomValue(sessionsAtom);
 
   const pendingStats = calculatePendingSessionStats(
@@ -75,14 +67,14 @@ export const PomodoroStats: React.FC = () => {
     <div>
       <h1 className="text-3xl font-bold text-gray-900">Session Planner</h1>
       <div className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
-        <div>{pendingSessions.length} remaining sessions</div>
+        <div>{sessionsState.pendingSessions.length} remaining sessions</div>
         <div>
           {pendingStats.hoursRemaining}hr {pendingStats.minutesRemaining}min
         </div>
       </div>
       <p className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
         <div>
-          {completedSessions.length} completed sessions
+          {sessionsState.completedSessions.length} completed sessions
           {" • "}
           {completedBreaks.length} completed breaks
         </div>
