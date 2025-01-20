@@ -9,7 +9,7 @@ import {
   timerSettingsAtom,
 } from "@/stores/settings-store";
 
-export const PomodoroSettingsComponent: React.FC = () => {
+export const Menu: React.FC = () => {
   const pomodoroSettings = useAtomValue(pomodoroSettingsAtom);
   const timerSettings = useAtomValue(timerSettingsAtom);
 

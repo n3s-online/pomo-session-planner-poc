@@ -1,6 +1,6 @@
 import { SessionCard } from "@/components/session-card";
 import { CreateSessionCard } from "@/components/create-session-card";
-import { PomodoroSettingsComponent } from "@/components/pomodoro-settings";
+import { Menu } from "@/components/menu";
 import { BreakCard } from "@/components/break-card";
 import { PomodoroStats } from "@/components/pomodoro-stats";
 import {
@@ -47,7 +47,7 @@ const SessionPlanner = () => {
             <PomodoroStats />
           </div>
           <div className="flex flex-col gap-4 items-center min-w-[300px]">
-            <PomodoroSettingsComponent />
+            <Menu />
           </div>
         </div>
       </div>
