@@ -17,7 +17,7 @@ export const pomodoroSettingsAtom = atomWithStorage<PomodoroSettings>(
 export const timerSettingsAtom = atomWithStorage<TimerSettings>(
   STORAGE_KEYS.TIMER_SETTINGS,
   {
-    enabled: true,
+    enabled: false,
     useTimerForStats: false,
   } satisfies TimerSettings
 );
