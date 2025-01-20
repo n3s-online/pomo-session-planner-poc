@@ -74,7 +74,7 @@ export function TimerSettingsDialog({ children }: TimerSettingsDialogProps) {
               <Label htmlFor="use-timer-for-stats">Use timer for stats</Label>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 md:gap-1">
             <Button
               variant="destructive"
               onClick={(e) => {
