@@ -149,6 +149,15 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
     completedSession,
   ];
 
+  if (!settingsState.breaksEnabled) {
+    set(sessionsAtom, {
+      ...sessionsState,
+      pendingSessions: newPendingSessions,
+      completedSessions: newCompletedSessions,
+    });
+    return;
+  }
+
   const breakLength = getBreakLength(
     get(pomodoroSettingsAtom),
     sessionsState.completedBreaks.length

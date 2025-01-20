@@ -10,7 +10,10 @@ export const getBreakLength = (
   settings: PomodoroSettings,
   numberOfPreviouslyCompletedBreaks: number
 ): number => {
-  if (!settings.longerBreaks) {
+  if (!settings.breaksEnabled) {
+    return 0;
+  }
+  if (!settings.longerBreaksEnabled) {
     return settings.breakLength;
   }
   return (numberOfPreviouslyCompletedBreaks + 1) %

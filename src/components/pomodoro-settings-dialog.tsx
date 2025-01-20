@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Dialog,
@@ -22,10 +22,6 @@ import { Button } from "@/components/ui/button";
 import { useAtom } from "jotai";
 import { pomodoroSettingsAtom } from "@/stores/settings-store";
 
-type FormValues = PomodoroSettings & {
-  enableLongerBreaks: boolean;
-};
-
 const SESSION_LENGTH_OPTIONS = [10, 15, 20, 25, 30, 40, 45, 60];
 const BREAK_LENGTH_OPTIONS = [3, 5, 8, 10, 15, 20, 30];
 
@@ -38,19 +34,23 @@ export function PomodoroSettingsDialog({
 }: PomodoroSettingsDialogProps) {
   const [pomodoroSettings, setPomodoroSettings] = useAtom(pomodoroSettingsAtom);
   const [open, setOpen] = React.useState(false);
-  const form = useForm<FormValues>({
-    defaultValues: {
-      enableLongerBreaks: !!pomodoroSettings.longerBreaks,
-      ...pomodoroSettings,
-    },
+  const form = useForm<PomodoroSettings>({
+    defaultValues: pomodoroSettings,
   });
 
-  const watchEnableLongerBreaks = form.watch("enableLongerBreaks");
+  const watchBreaksEnabled = form.watch("breaksEnabled");
+  const watchLongerBreaksEnabled = form.watch("longerBreaksEnabled");
 
-  const onSubmit = ({ enableLongerBreaks, ...data }: FormValues) => {
+  const onSubmit = (data: PomodoroSettings) => {
     setPomodoroSettings(data);
     setOpen(false);
   };
+
+  useEffect(() => {
+    if (open) {
+      form.reset(pomodoroSettings);
+    }
+  }, [open, pomodoroSettings, form]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,9 +83,22 @@ export function PomodoroSettingsDialog({
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="breaks-enabled"
+                checked={watchBreaksEnabled}
+                onCheckedChange={(checked) =>
+                  form.setValue("breaksEnabled", checked)
+                }
+              />
+              <Label htmlFor="breaks-enabled">Enable breaks</Label>
+            </div>
+          </div>
           <div className="grid grid-rows-[auto_1fr] gap-y-2">
             <label className="text-sm font-medium">Break Length</label>
             <Select
+              disabled={!watchBreaksEnabled}
               value={form.watch("breakLength").toString()}
               onValueChange={(value) =>
                 form.setValue("breakLength", Number(value))
@@ -108,10 +121,11 @@ export function PomodoroSettingsDialog({
             <div className="flex items-center space-x-2">
               <Switch
                 id="longer-breaks"
-                checked={watchEnableLongerBreaks}
+                checked={watchLongerBreaksEnabled}
                 onCheckedChange={(checked) =>
-                  form.setValue("enableLongerBreaks", checked)
+                  form.setValue("longerBreaksEnabled", checked)
                 }
+                disabled={!watchBreaksEnabled}
               />
               <Label htmlFor="longer-breaks">Enable longer breaks</Label>
             </div>
@@ -120,7 +134,7 @@ export function PomodoroSettingsDialog({
               <div className="grid grid-rows-[auto_1fr] gap-y-2">
                 <label className="text-sm font-medium">Frequency</label>
                 <Select
-                  disabled={!watchEnableLongerBreaks}
+                  disabled={!watchLongerBreaksEnabled || !watchBreaksEnabled}
                   value={form.watch("longerBreaks.frequency")?.toString()}
                   onValueChange={(value) =>
                     form.setValue("longerBreaks.frequency", Number(value))
@@ -142,7 +156,7 @@ export function PomodoroSettingsDialog({
               <div className="grid grid-rows-[auto_1fr] gap-y-2">
                 <label className="text-sm font-medium">Long break length</label>
                 <Select
-                  disabled={!watchEnableLongerBreaks}
+                  disabled={!watchLongerBreaksEnabled || !watchBreaksEnabled}
                   value={form.watch("longerBreaks.length")?.toString()}
                   onValueChange={(value) =>
                     form.setValue("longerBreaks.length", Number(value))

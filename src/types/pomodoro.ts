@@ -1,7 +1,9 @@
 export interface PomodoroSettings {
   sessionLength: number;
   breakLength: number;
-  longerBreaks?: {
+  breaksEnabled: boolean;
+  longerBreaksEnabled: boolean;
+  longerBreaks: {
     frequency: number;
     length: number;
   };

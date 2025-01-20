@@ -33,7 +33,9 @@ export const Menu: React.FC = () => {
         <div className="text-xs font-medium text-gray-700">Pomodoro</div>
         <PomodoroSettingsDialog>
           <Button variant="outline">
-            {pomodoroSettings.sessionLength}/{pomodoroSettings.breakLength}min
+            {pomodoroSettings.breaksEnabled
+              ? `${pomodoroSettings.sessionLength}/${pomodoroSettings.breakLength}min`
+              : `${pomodoroSettings.sessionLength}min`}
           </Button>
         </PomodoroSettingsDialog>
       </div>

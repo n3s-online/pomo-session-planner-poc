@@ -7,6 +7,8 @@ export const pomodoroSettingsAtom = atomWithStorage<PomodoroSettings>(
   {
     sessionLength: 25,
     breakLength: 5,
+    breaksEnabled: true,
+    longerBreaksEnabled: true,
     longerBreaks: {
       frequency: 3,
       length: 15,
