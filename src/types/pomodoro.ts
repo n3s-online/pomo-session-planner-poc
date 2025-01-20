@@ -12,4 +12,9 @@ export interface PomodoroSettings {
 export type TimerSettings = {
   enabled: boolean;
   useTimerForStats: boolean;
+  sound: {
+    enabled: boolean;
+    soundName: string;
+    volume: number;
+  };
 };

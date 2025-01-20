@@ -21,5 +21,10 @@ export const timerSettingsAtom = atomWithStorage<TimerSettings>(
   {
     enabled: false,
     useTimerForStats: false,
+    sound: {
+      enabled: false,
+      soundName: "bells",
+      volume: 0.7,
+    },
   } satisfies TimerSettings
 );
