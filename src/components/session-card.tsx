@@ -25,6 +25,15 @@ interface SessionCardProps {
   activeSession: boolean;
 }
 
+const formatCompletionDate = (date: Date) => {
+  return new Date(date).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 export const SessionCard: React.FC<SessionCardProps> = ({
   session,
   activeSession,
@@ -147,18 +156,28 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               ) : (
                 <Collapsible>
                   <div className="flex justify-between items-center">
-                    <h3 className="font-medium text-lg text-gray-900">
-                      {session.title}
-                      {session.completed &&
-                        session.actualLength !== undefined && (
-                          <span className="ml-2 text-sm text-gray-500">
-                            ({session.actualLength} min
-                            {session.breakAfterLength !== undefined &&
-                              ` + ${session.breakAfterLength} min break`}
-                            )
-                          </span>
-                        )}
-                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <h3 className="font-medium text-lg text-gray-900">
+                        {session.title}
+                        {session.completed &&
+                          session.actualLength !== undefined && (
+                            <span className="ml-2 text-sm text-gray-500">
+                              ({session.actualLength} min
+                              {session.breakAfterLength !== undefined &&
+                                ` + ${session.breakAfterLength} min break`}
+                              )
+                            </span>
+                          )}
+                      </h3>
+                      {session.completed && (
+                        <h3 className="text-sm font-medium text-gray-600">
+                          {session.sessionEndDate &&
+                            `${formatCompletionDate(
+                              new Date(session.sessionEndDate)
+                            )}`}
+                        </h3>
+                      )}
+                    </div>
                     {session.description && (
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 w-8">
