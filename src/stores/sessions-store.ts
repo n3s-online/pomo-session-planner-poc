@@ -113,7 +113,7 @@ export const addSessionAtom = atom(
 
 export const completeSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
-  const settingsState = get(pomodoroSettingsAtom);
+  const pomodoroSettings = get(pomodoroSettingsAtom);
   const timerSettings = get(timerSettingsAtom);
   const index = sessionsState.pendingSessions.findIndex((s) => s.id === id);
   if (index === -1) return;
@@ -130,7 +130,7 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
             new Date(previousPendingSession.sessionStartDate).getTime()) /
             (1000 * 60)
         )
-      : settingsState.sessionLength;
+      : pomodoroSettings.sessionLength;
   const completedSession: CompletedSession = {
     ...previousPendingSession,
     completed: true,
@@ -149,7 +149,7 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
     completedSession,
   ];
 
-  if (!settingsState.breaksEnabled) {
+  if (!pomodoroSettings.breaksEnabled) {
     set(sessionsAtom, {
       ...sessionsState,
       pendingSessions: newPendingSessions,
