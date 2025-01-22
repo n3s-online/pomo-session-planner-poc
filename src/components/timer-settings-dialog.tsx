@@ -26,6 +26,8 @@ import { Slider } from "@/components/ui/slider";
 import { playSound, SOUNDS } from "@/lib/sounds";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Tooltip, TooltipContent } from "./ui/tooltip";
+import { TooltipTrigger } from "@radix-ui/react-tooltip";
 
 interface TimerSettingsDialogProps {
   children: React.ReactNode;
@@ -114,7 +116,19 @@ export function TimerSettingsDialog({ children }: TimerSettingsDialogProps) {
                   form.setValue("useTimerForStats", checked)
                 }
               />
-              <Label htmlFor="use-timer-for-stats">Use timer for stats</Label>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Label htmlFor="use-timer-for-stats" className="underline">
+                    Use timer for stats
+                  </Label>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    I would advise against using the timer for stats unless you
+                    have a very well structured day.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
