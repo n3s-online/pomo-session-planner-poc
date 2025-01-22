@@ -18,7 +18,7 @@ export const BreakCard: React.FC<BreakCardProps> = ({ breakProps }) => {
   );
 
   return (
-    <Card className="ring-2 ring-blue-500 shadow-lg hover:shadow-xl bg-gradient-to-br from-blue-100 to-purple-100 transform scale-100 transition-all duration-300 ease-in-out">
+    <Card className="ring-2 ring-blue-500 shadow-lg hover:shadow-xl bg-gradient-to-br from-blue-100 to-blue-300 transform scale-100 transition-all duration-300 ease-in-out">
       <CardContent className="p-4">
         <div className="space-y-2 text-center">
           <h3 className="font-medium text-xl text-gray-900">
