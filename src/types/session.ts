@@ -35,4 +35,7 @@ export type SessionState = {
   completedSessions: CompletedSession[];
   completedBreaks: CompletedBreak[];
   onBreakProps?: BreakProps;
+  soundState?: {
+    alreadyPlayed: boolean;
+  };
 };

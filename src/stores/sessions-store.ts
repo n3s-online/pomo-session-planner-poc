@@ -11,6 +11,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { atom } from "jotai";
 import { pomodoroSettingsAtom, timerSettingsAtom } from "./settings-store";
 import { getBreakLength } from "@/lib/utils";
+import { playSound } from "@/lib/sounds";
 
 // Base sessions atom
 export const sessionsAtom = atomWithStorage<SessionState>(
@@ -51,6 +52,9 @@ export const sessionsAtom = atomWithStorage<SessionState>(
       },
     ],
     completedSessions: [],
+    soundState: {
+      alreadyPlayed: false,
+    },
   }
 );
 
@@ -68,13 +72,18 @@ export const moveSessionAtom = atom(
       oldIndex,
       newIndex
     );
+    let soundState = sessionsState.soundState;
 
     if (oldIndex === 0 || (newIndex === 0 && oldIndex !== newIndex)) {
       newPendingSessions[0].sessionStartDate = new Date();
+      soundState = {
+        alreadyPlayed: false,
+      };
     }
 
     set(sessionsAtom, {
       ...sessionsState,
+      soundState,
       pendingSessions: newPendingSessions,
     });
   }
@@ -82,11 +91,18 @@ export const moveSessionAtom = atom(
 
 export const deleteSessionAtom = atom(null, (get, set, id: string) => {
   const sessionsState = get(sessionsAtom);
+  const indexToDelete = sessionsState.pendingSessions.findIndex(
+    (session) => session.id === id
+  );
+  if (indexToDelete === -1) return;
+  const newPendingSessions = [...sessionsState.pendingSessions];
+  newPendingSessions.splice(indexToDelete, 1);
+  if (indexToDelete === 0 && newPendingSessions.length > 0) {
+    newPendingSessions[0].sessionStartDate = new Date();
+  }
   set(sessionsAtom, {
     ...sessionsState,
-    pendingSessions: sessionsState.pendingSessions.filter(
-      (session) => session.id !== id
-    ),
+    pendingSessions: newPendingSessions,
   });
 });
 
@@ -97,6 +113,12 @@ export const addSessionAtom = atom(
 
     set(sessionsAtom, {
       ...sessionsState,
+      soundState:
+        sessionsState.pendingSessions.length === 0
+          ? undefined
+          : {
+              alreadyPlayed: false,
+            },
       pendingSessions: [
         ...sessionsState.pendingSessions,
         {
@@ -139,9 +161,13 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
   };
 
   const newPendingSessions = [...sessionsState.pendingSessions];
+  let soundState = undefined;
   newPendingSessions.splice(index, 1);
   if (newPendingSessions.length > 0) {
     newPendingSessions[0].sessionStartDate = new Date();
+    soundState = {
+      alreadyPlayed: false,
+    };
   }
 
   const newCompletedSessions = [
@@ -152,6 +178,7 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
   if (!pomodoroSettings.breaksEnabled) {
     set(sessionsAtom, {
       ...sessionsState,
+      soundState,
       pendingSessions: newPendingSessions,
       completedSessions: newCompletedSessions,
     });
@@ -167,6 +194,9 @@ export const completeSessionAtom = atom(null, (get, set, id: string) => {
     ...sessionsState,
     pendingSessions: newPendingSessions,
     completedSessions: newCompletedSessions,
+    soundState: {
+      alreadyPlayed: false,
+    },
     onBreakProps:
       newPendingSessions.length > 0
         ? {
@@ -214,8 +244,12 @@ export const completeBreakAtom = atom(null, (get, set) => {
   }
 
   const newPendingSessions = [...sessionsState.pendingSessions];
+  let soundState = undefined;
   if (newPendingSessions.length > 0) {
     newPendingSessions[0].sessionStartDate = new Date();
+    soundState = {
+      alreadyPlayed: false,
+    };
   }
 
   set(sessionsAtom, {
@@ -230,6 +264,7 @@ export const completeBreakAtom = atom(null, (get, set) => {
       },
     ],
     onBreakProps: undefined,
+    soundState,
   });
 });
 
@@ -271,10 +306,14 @@ export const deleteAllSessionsAtom = atom(null, (_, set) => {
 
 export const resetStartTimesAtom = atom(null, (get, set) => {
   const sessionsState = get(sessionsAtom);
-
+  let soundState = sessionsState.soundState;
+  if (soundState) {
+    soundState.alreadyPlayed = false;
+  }
   if (sessionsState.onBreakProps) {
     set(sessionsAtom, {
       ...sessionsState,
+      soundState,
       onBreakProps: {
         ...sessionsState.onBreakProps,
         breakStartDate: new Date(),
@@ -289,6 +328,43 @@ export const resetStartTimesAtom = atom(null, (get, set) => {
     set(sessionsAtom, {
       ...sessionsState,
       pendingSessions: newPendingSessions,
+      soundState,
     });
   }
+});
+
+export const playSoundAtom = atom(null, (get, set) => {
+  const sessionsState = get(sessionsAtom);
+  if (sessionsState.soundState?.alreadyPlayed) return;
+  if (!sessionsState.onBreakProps && sessionsState.pendingSessions.length === 0)
+    return;
+  const startDate = sessionsState.onBreakProps
+    ? sessionsState.onBreakProps.breakStartDate
+    : sessionsState.pendingSessions[0].sessionStartDate;
+  if (!startDate) return;
+  const pomodoroSettings = get(pomodoroSettingsAtom);
+  const minutesToTriggerAt = sessionsState.onBreakProps
+    ? getBreakLength(pomodoroSettings, sessionsState.completedBreaks.length)
+    : pomodoroSettings.sessionLength;
+  const elapsedMinutes = Math.floor(
+    (new Date().getTime() - new Date(startDate).getTime()) / (1000 * 60)
+  );
+
+  if (elapsedMinutes < minutesToTriggerAt) return;
+
+  set(sessionsAtom, {
+    ...sessionsState,
+    soundState: {
+      alreadyPlayed: true,
+    },
+  });
+
+  const timerSettings = get(timerSettingsAtom);
+  if (
+    !timerSettings.enabled ||
+    !timerSettings.sound.enabled ||
+    timerSettings.sound.volume === 0
+  )
+    return;
+  playSound(timerSettings.sound.soundName, timerSettings.sound.volume);
 });
