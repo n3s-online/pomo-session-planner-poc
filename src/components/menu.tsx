@@ -1,5 +1,5 @@
 import React from "react";
-import { ClearSessionsButton } from "@/components/ClearSessionsButton";
+import { ClearSessionsButton } from "@/components/clear-sessions-button";
 import { PomodoroSettingsDialog } from "@/components/pomodoro-settings-dialog";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { Button } from "@/components/ui/button";
