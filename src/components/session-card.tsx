@@ -75,8 +75,10 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
   const handleDelete = () => deleteSession(session.id);
   const handleComplete = () => completeSession(session.id);
-  const handleEdit = (updates: Partial<PendingSession>) =>
+  const handleEdit = (updates: Partial<PendingSession>) => {
     editSession({ id: session.id, updates });
+    setIsEditing(false);
+  };
 
   const handleCancelEdit = () => {
     setIsEditing(false);

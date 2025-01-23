@@ -116,9 +116,7 @@ export const addSessionAtom = atom(
       soundState:
         sessionsState.pendingSessions.length === 0
           ? undefined
-          : {
-              alreadyPlayed: false,
-            },
+          : sessionsState.soundState,
       pendingSessions: [
         ...sessionsState.pendingSessions,
         {
@@ -282,7 +280,7 @@ export const editSessionAtom = atom(
     newSessions[index] = { ...newSessions[index], ...updates };
     set(sessionsAtom, {
       ...sessionsState,
-      sessions: newSessions,
+      pendingSessions: newSessions,
     });
   }
 );
