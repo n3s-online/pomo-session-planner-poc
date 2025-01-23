@@ -72,7 +72,7 @@ export const PomodoroStats: React.FC = () => {
           {pendingStats.hoursRemaining}hr {pendingStats.minutesRemaining}min
         </div>
       </div>
-      <p className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
+      <div className="text-gray-500 mt-2 text-xs flex flex-row justify-between">
         <div>
           {sessionsState.completedSessions.length} completed sessions
           {" • "}
@@ -81,7 +81,7 @@ export const PomodoroStats: React.FC = () => {
         <div>
           {completedStats.hoursRemaining}hr {completedStats.minutesRemaining}min
         </div>
-      </p>
+      </div>
     </div>
   );
 };
